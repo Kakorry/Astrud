@@ -1,17 +1,7 @@
 package com.github.korblu.astrud.ui.pages
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,7 +17,10 @@ import com.github.korblu.astrud.ui.theme.AstrudTheme
 fun AstrudWelcome(navController: NavController) {
     AstrudTheme {
         Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
-            AstrudWelcomeContent(modifier = Modifier.padding(innerPadding), navController = navController)
+            AstrudWelcomeContent(
+                modifier = Modifier.padding(innerPadding),
+                navController = navController
+            )
         }
     }
 }
@@ -47,23 +40,37 @@ fun AstrudWelcomeContent(modifier: Modifier = Modifier, navController: NavContro
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                TitleText("Astrud")
+                TitleText()
                 SloganText("\"Made for all, with love for music.\"")
-                NextButton(onClick = { navController.navigate("HomeScreen") }, modifier = Modifier.padding(bottom = 20.dp))
+                NextButton(
+                    onClick = { navController.navigate("Home") },
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
             }
         }
     }
 }
 
 @Composable
-fun TitleText(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        fontSize = 40.sp,
-        color = MaterialTheme.colorScheme.onBackground,
-        fontWeight = FontWeight.Bold,
-        modifier = modifier
-    )
+fun TitleText(modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "As",
+            fontSize = 40.sp,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            fontWeight = FontWeight.Bold,
+            modifier = modifier
+        )
+        Text(
+            text = "trud",
+            fontSize = 40.sp,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold,
+            modifier = modifier
+        )
+    }
 }
 
 @Composable
@@ -89,6 +96,10 @@ fun NextButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
         ),
         modifier = modifier
     ) {
-        Text(text = "Next ❤️", fontSize = 24.sp, textAlign = TextAlign.Center)
+        Text(
+            text = "Next ❤️",
+            fontSize = 24.sp,
+            textAlign = TextAlign.Center
+        )
     }
 }
