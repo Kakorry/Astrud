@@ -1,5 +1,9 @@
 [versions]
+accompanistNavigationAnimation = "0.34.0"
 agp = "8.10.0"
+androidxNavigationCompose = "2.0.21"
+androidxNavigationComposeVersion = "2.9.0"
+coreSplashscreen = "1.0.1"
 kotlin = "2.0.21"
 coreKtx = "1.10.1"
 junit = "4.13.2"
@@ -13,11 +17,16 @@ composeBom = "2024.09.00"
 appcompat = "1.7.0"
 navigationCompose = "2.9.0"
 navigationComposeJvmstubs = "2.9.0"
+navigationComposeVersion = "2.2"
 navVersion = "2.9.0"
 
 [libraries]
+accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanistNavigationAnimation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-navigation-compose-v290 = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+androidx-navigation-compose-v2021 = { module = "androidx.navigation:navigation-compose", version.ref = "androidxNavigationCompose" }
+androidx-navigation-compose-v22 = { module = "androidx.navigation:navigation-compose", version.ref = "navigationComposeVersion" }
+androidx-navigation-compose-v290 = { module = "androidx.navigation:navigation-compose", version.ref = "androidxNavigationComposeVersion" }
 androidx-navigation-dynamic-features-fragment = { module = "androidx.navigation:navigation-dynamic-features-fragment", version.ref = "navVersion" }
 androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navVersion" }
 androidx-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
