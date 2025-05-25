@@ -1,7 +1,7 @@
 package com.github.korblu.astrud.ui.pages
 
-import android.widget.Space
-import androidx.compose.animation.animateContentSize
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,13 +22,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.github.korblu.astrud.data.media.AudioFiles
 import com.github.korblu.astrud.ui.theme.AstrudTheme
 
 // I can't tell if Jetpack Compose is really like this or I'm just unorganized.
@@ -91,6 +94,11 @@ fun AstrudHeader() {
 
 @Composable
 fun AstrudHome(navController: NavController) {
+    val context = LocalContext.current
+    val audioFiles = remember { AudioFiles(context as Activity) }
+
+    val launch = (rememberLauncherForActivityResult(audioFiles.contract, audioFiles.onResult))
+
     AstrudTheme {
         Surface(
             color = MaterialTheme.colorScheme.background,
@@ -120,7 +128,7 @@ fun AstrudHome(navController: NavController) {
                 }
 
                 Button(
-                    onClick = {},
+                    onClick = {launch.launch(null)},
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                                         .padding(top = 15.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -134,3 +142,4 @@ fun AstrudHome(navController: NavController) {
         }
     }
 }
+
