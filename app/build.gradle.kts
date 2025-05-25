@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.navigation.dynamic.features.fragment)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.navigation.compose.v290)
+    implementation(libs.androidx.material.icons.extended)
     androidTestImplementation(libs.androidx.navigation.testing)
     implementation(libs.kotlinx.serialization.json)
 }
