@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,55 +46,65 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Unrelated, but did you know Astrud sung Girl from Ipanema?
+// You should listen to it. 05/25/2025
+
+@Composable
+fun AstrudAppBar() {
+    BottomAppBar(
+        modifier = Modifier.height(105.dp)
+            .fillMaxWidth(),
+        actions = {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(55.dp)
+                ) {
+                    IconButton(onClick = { /* do something */ }) {
+                        Icon(
+                            Icons.Filled.Home,
+                            contentDescription = "Home"
+                        )
+                    }
+                    IconButton(onClick = { /* do something */ }) {
+                        Icon(
+                            Icons.Filled.Album,
+                            contentDescription = "Albums",
+                        )
+                    }
+                    IconButton(onClick = { /* do something */ }) {
+                        Icon(
+                            Icons.Filled.LibraryMusic,
+                            contentDescription = "Songs",
+                        )
+                    }
+                    IconButton(onClick = { /* do something */ }) {
+                        Icon(
+                            Icons.Filled.Person,
+                            contentDescription = "User",
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
+
 @Composable
 fun AstrudApp() {
     AstrudTheme {
         Scaffold(
             bottomBar = {
-                BottomAppBar(
-                    actions = {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(35.dp)
-                            ) {
-                                IconButton(onClick = { /* do something */ }) {
-                                    Icon(
-                                        Icons.Filled.Check,
-                                        contentDescription = "Localized description"
-                                    )
-                                }
-                                IconButton(onClick = { /* do something */ }) {
-                                    Icon(
-                                        Icons.Filled.Edit,
-                                        contentDescription = "Localized description",
-                                    )
-                                }
-                                IconButton(onClick = { /* do something */ }) {
-                                    Icon(
-                                        Icons.Filled.ShoppingCart,
-                                        contentDescription = "Localized description",
-                                    )
-                                }
-                                IconButton(onClick = { /* do something */ }) {
-                                    Icon(
-                                        Icons.Filled.Phone,
-                                        contentDescription = "Localized description",
-                                    )
-                                }
-                            }
-                        }
-                    }
-                )
+                AstrudAppBar()
             }
         ) { innerPadding ->
-            var rememberNav = rememberNavController()
+            val navController = rememberNavController()
 
             NavHost(
-                navController = rememberNav,
+                navController = navController,
                 startDestination = "Welcome",
                 modifier = Modifier.padding(innerPadding)
             ) {
@@ -100,12 +112,12 @@ fun AstrudApp() {
                     route = "Welcome",
                     enterTransition = { EnterTransition.None },
                     exitTransition = { ExitTransition.None })
-                { AstrudWelcome(rememberNav) }
+                { AstrudWelcome(navController) }
                 composable(
                     route = "Home",
                     enterTransition = { fadeIn(animationSpec = tween(400)) },
                     exitTransition = { fadeOut(animationSpec = tween(400)) }
-                ) { AstrudHome() }
+                ) { AstrudHome(navController) }
             }
         }
     }
