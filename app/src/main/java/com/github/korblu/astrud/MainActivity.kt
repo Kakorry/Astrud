@@ -63,25 +63,25 @@ fun AstrudAppBar() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(55.dp)
                 ) {
-                    IconButton(onClick = { /* do something */ }) {
+                    IconButton(onClick = { /* todo Make it do something */ }) {
                         Icon(
                             Icons.Filled.Home,
                             contentDescription = "Home"
                         )
                     }
-                    IconButton(onClick = { /* do something */ }) {
+                    IconButton(onClick = { /* todo Make it do something */ }) {
                         Icon(
                             Icons.Filled.Album,
                             contentDescription = "Albums",
                         )
                     }
-                    IconButton(onClick = { /* do something */ }) {
+                    IconButton(onClick = { /* todo Make it do something */ }) {
                         Icon(
                             Icons.Filled.LibraryMusic,
                             contentDescription = "Songs",
                         )
                     }
-                    IconButton(onClick = { /* do something */ }) {
+                    IconButton(onClick = { /* todo Make it do something */ }) {
                         Icon(
                             Icons.Filled.Person,
                             contentDescription = "User",
