@@ -41,7 +41,7 @@ fun AstrudWelcomeContent(modifier: Modifier = Modifier, navController: NavContro
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 TitleText()
-                SloganText("\"Made for all, with love for music.\"")
+                SloganText("Your new music player!")
                 NextButton(
                     onClick = { navController.navigate("Home") },
                     modifier = Modifier.padding(bottom = 20.dp)
@@ -97,7 +97,7 @@ fun NextButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
         modifier = modifier
     ) {
         Text(
-            text = "Next ❤️",
+            text = "Next",
             fontSize = 24.sp,
             textAlign = TextAlign.Center
         )
