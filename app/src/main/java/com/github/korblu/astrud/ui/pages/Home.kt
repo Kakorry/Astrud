@@ -1,9 +1,5 @@
 package com.github.korblu.astrud.ui.pages
 
-import android.app.Activity
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,35 +14,31 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.github.korblu.astrud.data.media.AudioFiles
+import com.github.korblu.astrud.AstrudAppBar
 import com.github.korblu.astrud.ui.theme.AstrudTheme
 
 // I can't tell if Jetpack Compose is really like this or I'm just unorganized.
@@ -116,8 +108,8 @@ fun AstrudDial() {
     ) {
         Box(
             modifier = Modifier
-                .padding(vertical = 20.dp)
-                .heightIn(max = 320.dp)
+                .padding(top = 20.dp)
+                .heightIn(max = 280.dp)
                 .widthIn(max = 310.dp)
         ) {
             val gridItems = List(9) { "Item $it" }
@@ -171,92 +163,99 @@ fun AstrudDial() {
 }
 
 @Composable
-fun AstrudHome(navController: NavController) {
-    val context = LocalContext.current
-    val audioFiles = remember { AudioFiles(context as Activity) }
-    var dataText by remember { mutableStateOf("Metadata Test Button") }
+fun Suggestions(flavorText: String) {
+    Row(
+        horizontalArrangement = Arrangement.Start,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = flavorText,
+            textAlign = TextAlign.Left,
+            fontWeight = FontWeight.Bold,
+            fontSize = 22.sp,
+            modifier = Modifier.padding(top = 25.dp, start = 15.dp)
+        )
+    }
+    LazyRow(
+        modifier = Modifier.padding(start = 15.dp, top = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        val suggestionList = List(20) { "Suggestion $it" }
 
-    val launchTree =
-        rememberLauncherForActivityResult(audioFiles.contractDocumentTree, audioFiles.createDir)
-    val launchSingle =
-        rememberLauncherForActivityResult(audioFiles.contractOpenDocument) { uri: Uri? ->
-            if (uri != null) {
-                dataText = audioFiles.getMetadata(context, uri).toString()
+        items(suggestionList) { song ->
+            @Composable
+            fun SongBox() {
+                Box(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(18.dp))
+                        .width(130.dp)
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = song,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
             }
+            SongBox()
         }
+    }
+}
 
-    AstrudTheme {
-        Surface(
-            color = MaterialTheme.colorScheme.background,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top,
+@Composable
+fun AstrudHome(navController: NavController) {
+    Scaffold(
+        bottomBar = {
+            AstrudAppBar(navController)
+        }
+    ) { innerPadding ->
+        AstrudTheme {
+            Surface(
+                color = MaterialTheme.colorScheme.background,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
             ) {
-                item {
-                    AstrudHeader()
-                }
-
-                item {
-                    Row(
-                        verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.Start,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        Text(
-                            text = "Speed Dial:",
-                            textAlign = TextAlign.Left,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
-                            modifier = Modifier.padding(top = 25.dp)
-                        )
-
-                        Spacer(modifier = Modifier.weight(1f))
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top,
+                ) {
+                    item {
+                        AstrudHeader()
                     }
-                }
 
-                item {
-                    AstrudDial()
-                }
-
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Button(
-                            onClick = { launchTree.launch(null) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                    item {
+                        Row(
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(text = "Testie Button")
+                            Text(
+                                text = "Speed Dial:",
+                                textAlign = TextAlign.Left,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 22.sp,
+                                modifier = Modifier.padding(top = 25.dp)
+                            )
                         }
                     }
-                }
 
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 5.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Button(
-                            onClick = { launchSingle.launch(arrayOf("audio/*")) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        ) {
-                            Text(text = dataText)
-                        }
+                    item {
+                        AstrudDial()
+                    }
+                    // todo Actually make these different and interesting. 06/04/2025 -K
+                    item {
+                        Suggestions("Suggestions:")
+                    }
+
+                    item {
+                        Suggestions("Recently Listened:")
+                    }
+
+                    item {
+                        Suggestions("Recently Added:")
                     }
                 }
             }
