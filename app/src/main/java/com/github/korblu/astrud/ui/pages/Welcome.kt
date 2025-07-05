@@ -78,7 +78,7 @@ fun SloganText(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         fontSize = 20.sp,
-        fontWeight = FontWeight.Thin,
+        fontWeight = FontWeight.Bold,
         fontStyle = FontStyle.Italic,
         color = MaterialTheme.colorScheme.onBackground,
         modifier = modifier
