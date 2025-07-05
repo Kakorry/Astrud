@@ -53,10 +53,8 @@ class AudioFiles(private val activity : Activity) {
             metadata["title"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
             metadata["artist"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
             metadata["album"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
-            metadata["albumArtist"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
             metadata["genre"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE)
             metadata["duration"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-            metadata["composer"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_COMPOSER)
             metadata["year"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR)
 
             val embeddedPic = metadataRetriever.embeddedPicture
@@ -78,5 +76,8 @@ class AudioFiles(private val activity : Activity) {
             }
         }
         return metadata
+    }
+    fun getEmbeddedPic() {
+        // todo Actually make this work lol lazy lazy (from bluu to bluu)
     }
 }
