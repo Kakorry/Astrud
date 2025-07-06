@@ -1,6 +1,10 @@
 package com.github.korblu.astrud.ui.pages
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -30,15 +34,23 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.createBitmap
 import androidx.navigation.NavController
 import com.github.korblu.astrud.AstrudAppBar
+import com.github.korblu.astrud.data.media.AudioFiles
 import com.github.korblu.astrud.ui.theme.AstrudTheme
 
 // I can't tell if Jetpack Compose is really like this or I'm just unorganized.
@@ -101,6 +113,10 @@ fun AstrudHeader() {
 
 @Composable
 fun AstrudDial() {
+    val context = LocalContext.current
+    val audioFiles = remember { AudioFiles(context as Activity) }
+    val getFolder = (rememberLauncherForActivityResult(audioFiles.contractDocumentTree, audioFiles.onResult))
+
     Box(
         modifier = Modifier
             .fillMaxWidth(),
@@ -126,17 +142,27 @@ fun AstrudDial() {
                 items(gridItems) { item ->
                     @Composable
                     fun ImageBox(roundUnit1: Dp, roundUnit2: Dp, roundUnit3: Dp, roundUnit4: Dp) {
-                        Box(
+                        var bitmap by remember { mutableStateOf(createBitmap(1, 1).asImageBitmap()) }
+                        var click = 0
+                        Image (
+                            bitmap = bitmap,
+                            contentDescription = "Album Cover",
                             modifier = Modifier
                                 .height(90.dp)
-                                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(topStart = roundUnit1, topEnd = roundUnit2, bottomStart = roundUnit3, bottomEnd = roundUnit4)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = item,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
+                                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(topStart = roundUnit1, topEnd = roundUnit2, bottomStart = roundUnit3, bottomEnd = roundUnit4))
+                                .clickable(
+                                    enabled = true,
+                                    // todo Fix whatever the fuck this is -K 06/06/2025
+                                    onClick = {
+                                        if (click == 0) {
+                                            getFolder.launch(null)
+                                            click = 1
+                                        } else {
+                                            bitmap = audioFiles.getEmbeddedPic(context)?.asImageBitmap() ?: bitmap
+                                        }
+                                    }
+                                ),
+                        )
                     }
 
                     when (item) {
@@ -180,7 +206,7 @@ fun Suggestions(flavorText: String) {
         modifier = Modifier.padding(start = 15.dp, top = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        val suggestionList = List(20) { "Suggestion $it" }
+        val suggestionList = List(10) { "Suggestion $it" }
 
         items(suggestionList) { song ->
             @Composable
