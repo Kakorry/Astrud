@@ -1,6 +1,5 @@
 package com.github.korblu.astrud
 
-import android.R
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -49,7 +47,7 @@ class MainActivity : ComponentActivity() {
 }
 
 // Unrelated, but did you know Astrud sung Girl from Ipanema?
-// You should listen to it. 05/25/2025
+// You should listen to it. -K 05/25/2025
 
 @Composable
 fun AstrudAppBar(navController: androidx.navigation.NavController) {
@@ -68,17 +66,21 @@ fun AstrudAppBar(navController: androidx.navigation.NavController) {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentRoute = navBackStackEntry?.destination?.route
 
-                    IconButton(onClick = { /* todo Make it do something */ }) {
-                        Icon(
-                            Icons.Filled.Home,
-                            contentDescription = "Home",
-                            tint = if (currentRoute == "Home") {
-                                androidx.compose.material3.MaterialTheme.colorScheme.primary
-                            } else {
-                                Color.White
-                            }
-                        )
+                    val selectedPrimary = if (currentRoute == "Home") {
+                        androidx.compose.material3.MaterialTheme.colorScheme.primary
+                    } else {
+                        androidx.compose.material3.MaterialTheme.colorScheme.onSurface
                     }
+                    IconButton(
+                        onClick = { /* todo Make it do something */ },
+                        content = {
+                            Icon(
+                                Icons.Filled.Home,
+                                contentDescription = "Home",
+                                tint = selectedPrimary
+                            )
+                        }
+                    )
                     IconButton(onClick = { /* todo Make it do something */ }) {
                         Icon(
                             Icons.Filled.LibraryMusic,
