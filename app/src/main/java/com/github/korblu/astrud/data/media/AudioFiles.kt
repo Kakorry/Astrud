@@ -41,42 +41,62 @@ class AudioFiles(private val activity : Activity) {
         }
     }
 
+    fun getAllDefaultDirSongsMD(context: Context) : MutableList<Map<String, String?>> {
+        val directoryFile = DocumentFile.fromTreeUri(context, songFolder)
+        var songs : Array<DocumentFile>?
+        val listOfSongMaps : MutableList<Map<String, String?>> = mutableListOf()
+
+        try {
+            songs = directoryFile?.listFiles()
+        } catch(e : Exception) {
+            songs = null
+            Log.e("AFError", "Failed to get songs from default directory: $e")
+        }
+
+        if (songs != null) {
+            for(song in songs) {
+                listOfSongMaps.add(this.getMetadata(context, song.uri))
+            }
+        }
+        return listOfSongMaps
+    }
+
     // bluu-chan's back after 2 months or so and i'll start commenting my codes more.
     // this function just gets a song's metadata like duration, artist, year, etc. 03/07/2025
-//    fun getMetadata(context : Context, uri : Uri) : Map<String, String?> {
-//        val metadataRetriever = MediaMetadataRetriever()
-//        val metadata = mutableMapOf<String, String?>()
-//
-//        try {
-//            metadataRetriever.setDataSource(context, uri)
-//
-//            metadata["title"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
-//            metadata["artist"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
-//            metadata["album"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
-//            metadata["genre"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE)
-//            metadata["duration"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-//            metadata["year"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR)
-//
-//            val embeddedPic = metadataRetriever.embeddedPicture
-//            if (embeddedPic != null) {
-//                metadata["hasEmbeddedPic"] = "true"
-//            } else {
-//                metadata["hasEmbeddedPic"] = "false"
-//            }
-//        } catch (e: Exception) {
-//            Log.e("Mp3MetadataExtractor", "Error extracting metadata: ${e.message}")
-//        } finally {
-//            try {
-//                metadataRetriever.release()
-//            } catch (e: Exception) {
-//                Log.e(
-//                    "Mp3MetadataExtractor",
-//                    "Error releasing MediaMetadataRetriever: ${e.message}"
-//                )
-//            }
-//        }
-//        return metadata
-//    }
+    fun getMetadata(context : Context, uri : Uri) : Map<String, String?> {
+        val metadataRetriever = MediaMetadataRetriever()
+        val metadata = mutableMapOf<String, String?>()
+
+        try {
+            metadataRetriever.setDataSource(context, uri)
+
+            metadata["title"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
+            metadata["artist"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+            metadata["album"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
+            metadata["genre"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE)
+            metadata["duration"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            metadata["year"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR)
+
+            val embeddedPic = metadataRetriever.embeddedPicture
+            if (embeddedPic != null) {
+                metadata["hasEmbeddedPic"] = "true"
+            } else {
+                metadata["hasEmbeddedPic"] = "false"
+            }
+        } catch (e: Exception) {
+            Log.e("Mp3MetadataExtractor", "Error extracting metadata: ${e.message}")
+        } finally {
+            try {
+                metadataRetriever.release()
+            } catch (e: Exception) {
+                Log.e(
+                    "Mp3MetadataExtractor",
+                    "Error releasing MediaMetadataRetriever: ${e.message}"
+                )
+            }
+        }
+        return metadata
+    }
     fun getEmbeddedPic(context : Context) : Bitmap? {
         val directoryFile = DocumentFile.fromTreeUri(context, songFolder)
         val songs = directoryFile?.listFiles()
