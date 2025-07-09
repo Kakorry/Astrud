@@ -18,8 +18,8 @@ abstract class AppDatabase : RoomDatabase(){
         private var INSTANCE: AppDatabase? = null
 
         /** Disclaimer: I got this whole block from AI because it's Standard Boilerplate. Though
-         * i do intend on learning exactly what this does in the future whenever i find myself
-         * messing with database shenanigans again. bluu-chan's 07/05/25.
+          i do intend on learning exactly what this does in the future whenever i find myself
+          messing with database shenanigans again. bluu-chan's 07/05/25.
           */
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
