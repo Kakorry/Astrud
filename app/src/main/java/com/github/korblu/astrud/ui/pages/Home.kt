@@ -1,6 +1,7 @@
 package com.github.korblu.astrud.ui.pages
 
 import android.app.Activity
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -53,9 +54,11 @@ import com.github.korblu.astrud.AstrudAppBar
 import com.github.korblu.astrud.data.media.AudioFiles
 import com.github.korblu.astrud.ui.theme.AstrudTheme
 
-// I can't tell if Jetpack Compose is really like this or I'm just unorganized.
-// Feels like a mess. Maybe UI Toolkits are just like this?
-// It is an intuitive to build mess, though. This is pretty fun. 05/23/2025
+/*
+    I can't tell if Jetpack Compose is really like this or I'm just unorganized.
+    Feels like a mess. Maybe UI Toolkits are just like this?
+    It is an intuitive to build mess, though. This is pretty fun. 05/23/2025
+*/
 
 @Composable
 fun AstrudHeader() {
@@ -115,7 +118,7 @@ fun AstrudHeader() {
 fun AstrudDial() {
     val context = LocalContext.current
     val audioFiles = remember { AudioFiles(context as Activity) }
-    val getFolder = (rememberLauncherForActivityResult(audioFiles.contractDocumentTree, audioFiles.onResult))
+    val getFolder = rememberLauncherForActivityResult(audioFiles.contractDocumentTree, audioFiles.onResult)
 
     Box(
         modifier = Modifier
@@ -153,12 +156,14 @@ fun AstrudDial() {
                                 .clickable(
                                     enabled = true,
                                     // todo Fix whatever the fuck this is -K 06/06/2025
+                                    // So true big K what the fuck is this -B 06/06/2025
                                     onClick = {
                                         if (click == 0) {
                                             getFolder.launch(null)
                                             click = 1
                                         } else {
                                             bitmap = audioFiles.getEmbeddedPic(context)?.asImageBitmap() ?: bitmap
+                                            Log.d("test", audioFiles.getAllDefaultDirSongsMD(context).toString())
                                         }
                                     }
                                 ),
