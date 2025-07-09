@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.github.korblu.astrud"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.github.korblu.astrud"
         minSdk = 31
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.navigation.compose.v290)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.hilt.android)
     androidTestImplementation(libs.androidx.navigation.testing)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.room.runtime)
