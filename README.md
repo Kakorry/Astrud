@@ -1,8 +1,5 @@
-<h1>
-    <p align="center">
-        <b> 🌸 Astrud </b>
-    </p>
-</h1>
+<p align="center"><img src=".github/astrud_icon.png" width="250"/></p>
+<h1><p align="center"><weight=900>Astrud</></p></h1>
 
 <p align="center"> A sleek, modern, Android music player with a focus on offline play and downloads. <br>
 Named after popular Brazilian Bossa Nova singer, Astrud Gilberto. </p>
