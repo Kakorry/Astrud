@@ -16,7 +16,7 @@ import kotlin.random.Random
 // me how to use this API because otherwise...(gulp) 05/25/25
 
 
-class AudioFiles(private val activity : Activity) {
+class UserSongs(private val activity : Activity) {
     val onResult = { uri: Uri? ->
         this.getDirectory(
             requestCode = 1,
@@ -25,7 +25,6 @@ class AudioFiles(private val activity : Activity) {
     }
 
     val contractDocumentTree = ActivityResultContracts.OpenDocumentTree()
-    // val contractOpenDocument = ActivityResultContracts.OpenDocument()
 
     lateinit var songFolder: Uri
 
@@ -41,7 +40,7 @@ class AudioFiles(private val activity : Activity) {
         }
     }
 
-    fun getAllDefaultDirSongsMD(context: Context) : MutableList<Map<String, String?>> {
+    fun getAllMetadata(context: Context) : MutableList<Map<String, String?>> {
         val directoryFile = DocumentFile.fromTreeUri(context, songFolder)
         var songs : Array<DocumentFile>?
         val listOfSongMaps : MutableList<Map<String, String?>> = mutableListOf()
@@ -78,6 +77,7 @@ class AudioFiles(private val activity : Activity) {
             metadata["year"] = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR)
 
             val embeddedPic = metadataRetriever.embeddedPicture
+
             if (embeddedPic != null) {
                 metadata["hasEmbeddedPic"] = "true"
             } else {
