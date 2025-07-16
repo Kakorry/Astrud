@@ -11,6 +11,7 @@ data class SongsEntity (
     val album: String?,
     val genre: String?,
     val duration: Long,
+    val year: String?,
     val uri: String,
-    val embPicPath: String?
+    val coverUri: String?
 )
