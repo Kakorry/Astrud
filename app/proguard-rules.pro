@@ -12,6 +12,11 @@
 #   public *;
 #}
 
+-keep class com.github.korblu.astrud.** { *; }
+-keep class com.github.korblu.astrud.ui.pages.** { *; }
+-keep class com.github.korblu.astrud.ui.viewmodels.** { *; }
+-keep class com.github.korblu.astrud.ui.theme.** { *; }
+
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
 #-keepattributes SourceFile,LineNumberTable
