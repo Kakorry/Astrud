@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.application") version "8.11.0"
+    id("com.android.application") version "8.11.1"
     id("org.jetbrains.kotlin.android") version "2.2.0"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
     kotlin("plugin.serialization") version "2.0.21"
@@ -25,7 +25,6 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
-            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -63,17 +62,23 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
+    implementation(libs.material)
     implementation(libs.androidx.navigation.dynamic.features.fragment)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.navigation.compose.v290)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.navigation.compose)
     androidTestImplementation(libs.androidx.navigation.testing)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore)
+    implementation(libs.coil.compose)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.session)
     implementation(libs.protobuf.kotlin) {
         exclude(group = "com.google.protobuf", module = "protobuf-java")
     }
