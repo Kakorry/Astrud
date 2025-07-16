@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [SongsEntity::class],
+    entities = [Song::class],
     version = 1,
     exportSchema = false
 )
