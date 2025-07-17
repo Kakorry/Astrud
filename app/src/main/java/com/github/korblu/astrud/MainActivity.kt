@@ -304,7 +304,6 @@ fun AstrudApp(
     navController: NavHostController
 ) {
     AstrudTheme {
-        val astrudUri by songViewModel.astrudMusicUri.collectAsState()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
