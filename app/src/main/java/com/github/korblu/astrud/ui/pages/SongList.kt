@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterAlt
@@ -25,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +37,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.github.korblu.astrud.ui.viewmodels.AppBarViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,7 +91,7 @@ fun Options() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AstrudSongList(innerPadding: PaddingValues, scrollBehavior: TopAppBarScrollBehavior) {
+fun AstrudSongList(innerPadding: PaddingValues, scrollBehavior: TopAppBarScrollBehavior, barViewModel: AppBarViewModel) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -96,6 +99,7 @@ fun AstrudSongList(innerPadding: PaddingValues, scrollBehavior: TopAppBarScrollB
             .padding(innerPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
+        state = barViewModel.listBarState.collectAsState().value
     ) {
         item {
             Options()
