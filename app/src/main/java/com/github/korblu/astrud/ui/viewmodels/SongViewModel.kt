@@ -25,9 +25,6 @@ class SongViewModel @Inject constructor(
     private val _randomSong = MutableStateFlow<Song?>(null)
     val randomSong = _randomSong.asStateFlow()
 
-    private val _astrudMusicUri = MutableStateFlow<String?>(null)
-    val astrudMusicUri = _astrudMusicUri.asStateFlow()
-
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
 
@@ -59,19 +56,6 @@ class SongViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = UserPreferences.getDefaultInstance()
         )
-
-    fun onUpdateAstrudMusicUri(uri: String) {
-        viewModelScope.launch {
-            userPrefRepo.updateAstrudMusicUri(uri)
-            _astrudMusicUri.value = userPrefRepo.getAstrudMusicUri()
-        }
-    }
-
-    fun onClearAstrudMusicUri() {
-        viewModelScope.launch {
-            userPrefRepo.clearAstrudMusicUri()
-        }
-    }
 
     fun onPermissionChange(isGranted: Boolean) {
         viewModelScope.launch {
