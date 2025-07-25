@@ -238,6 +238,7 @@ class UserSongs(songViewModel: SongViewModel) {
         val projection = arrayOf(
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.ALBUM_ID
         )
@@ -271,11 +272,13 @@ class UserSongs(songViewModel: SongViewModel) {
                     it.moveToPosition(randomPosition)
 
                     val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
+                    val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                     val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
                     val albumIdColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
                     val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
 
                     val title : String? = it.getString(titleColumn)
+                    val artist : String? = it.getString(artistColumn)
                     val id : String = it.getString(idColumn)
                     val album : String = it.getString(albumColumn)
                     val albumId = it.getLong(albumIdColumn)
@@ -291,6 +294,7 @@ class UserSongs(songViewModel: SongViewModel) {
                     return@withContext mapOf(
                         "title" to title,
                         "uri" to songUri,
+                        "artist" to artist,
                         "album" to album,
                         "albumArtUri" to albumArtUri
                     )

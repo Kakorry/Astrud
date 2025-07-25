@@ -1,6 +1,7 @@
 package com.github.korblu.astrud.ui.pages
 
 import android.app.Activity
+import android.net.Uri
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -53,10 +55,10 @@ import coil3.request.placeholder
 import coil3.request.transitionFactory
 import coil3.transition.CrossfadeTransition
 import com.github.korblu.astrud.R
-import com.github.korblu.astrud.data.media.ExoPlayerManager
 import com.github.korblu.astrud.data.media.UserSongs
 import com.github.korblu.astrud.ui.theme.AstrudTheme
 import com.github.korblu.astrud.ui.viewmodels.AppBarViewModel
+import com.github.korblu.astrud.ui.viewmodels.NowPlayingViewModel
 import com.github.korblu.astrud.ui.viewmodels.SongViewModel
 
 /*
@@ -65,31 +67,50 @@ import com.github.korblu.astrud.ui.viewmodels.SongViewModel
     It is an intuitive to build mess, though. This is pretty fun. 05/23/2025
 */
 
+data class SongMetadata(
+    val uri: Uri?,
+    val title: String?,
+    val artist: String?,
+    val albumArtUri: Uri?
+) 
+
 @Composable
 fun SongArtwork(
     modifier: Modifier = Modifier,
+    navController: NavController,
     scale: ContentScale = ContentScale.Crop,
-    songAlbumUri: String? = null,
-    songTitle: String? = null,
-    songUri: String? = null,
+    songMetadata: SongMetadata,    
+    nowPlayingViewModel: NowPlayingViewModel = hiltViewModel<NowPlayingViewModel>(),
+    barViewModel: AppBarViewModel = hiltViewModel<AppBarViewModel>(),
     rounding: Dp = 12.dp
 ) {
-    val context = LocalContext.current
-
     Box(
         modifier = modifier
             .clickable(
                 onClick = {
-                    val exoPlayer = ExoPlayerManager(context)
-                    exoPlayer.initPlayer()
-                    if (songUri != null)
-                        exoPlayer.playAudio(songUri)
+                    if (songMetadata.uri == null) {
+                        return@clickable
+                    } else {
+                        nowPlayingViewModel.playSong(
+                            songMetadata.uri,
+                            songMetadata.title!!,
+                            songMetadata.artist!!,
+                            songMetadata.albumArtUri
+                        )
+
+                        val encodedUri = Uri.encode(songMetadata.uri.toString())
+                        val encodedTitle = Uri.encode(songMetadata.title)
+                        val encodedAlbumArtUri = Uri.encode(songMetadata.albumArtUri.toString())
+                        barViewModel.onHideBars()
+                        navController.navigate("NowPlayingScreen/$encodedUri/$encodedTitle/$encodedAlbumArtUri")
+                    }
+
                 }
             ),
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(songAlbumUri)
+                .data(songMetadata.albumArtUri)
                 .placeholder(R.drawable.album_placeholder)
                 .fallback(R.drawable.album_placeholder)
                 .error(R.drawable.album_placeholder)
@@ -103,7 +124,7 @@ fun SongArtwork(
             contentScale = scale,
         )
 
-        if (songTitle != null) {
+        if (songMetadata.title != null) {
             Box(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.onSecondary)
@@ -113,7 +134,7 @@ fun SongArtwork(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = songTitle,
+                    text = songMetadata.title,
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1,
@@ -139,7 +160,12 @@ fun getRandomSongs(songViewModel: SongViewModel, listSize: Int = 10): List<Map<S
 }
 
 @Composable
-fun AstrudDial(songViewModel: SongViewModel) {
+fun AstrudDial(
+    navController: NavController,
+    songViewModel: SongViewModel,
+    barViewModel: AppBarViewModel,
+    nowPlayingViewModel: NowPlayingViewModel
+) {
     val songAttributes = getRandomSongs(songViewModel, 9)
 
     Box(
@@ -164,6 +190,7 @@ fun AstrudDial(songViewModel: SongViewModel) {
                     val songAlbumUri = songAttributes?.get(index)?.get("albumArtUri")
                     val songTitle = songAttributes?.get(index)?.get("title")
                     val songUri = songAttributes?.get(index)?.get("uri")
+                    val songArtist = songAttributes?.get(index)?.get("artist")
 
                     SongArtwork(
                         modifier = Modifier
@@ -173,10 +200,16 @@ fun AstrudDial(songViewModel: SongViewModel) {
                                     size = 12.dp
                                 )
                             ),
-                        songAlbumUri = songAlbumUri,
-                        songTitle = songTitle,
+                        nowPlayingViewModel = nowPlayingViewModel,
+                        songMetadata = SongMetadata(
+                            songUri?.toUri(),
+                            songTitle,
+                            songArtist,
+                            songAlbumUri?.toUri()
+                        ),
+                        navController = navController,
                         rounding = 12.dp,
-                        songUri = songUri
+                        barViewModel = barViewModel
                     )
                 }
             }
@@ -185,7 +218,13 @@ fun AstrudDial(songViewModel: SongViewModel) {
 }
 
 @Composable
-fun SongSuggestions(flavorText: String, songViewModel: SongViewModel) {
+fun SongSuggestions(
+    navController: NavController,
+    flavorText: String,
+    songViewModel: SongViewModel,
+    nowPlayingViewModel: NowPlayingViewModel,
+    barViewModel: AppBarViewModel
+) {
     val songAttributes = getRandomSongs(songViewModel, 10)
 
     Row(
@@ -208,6 +247,7 @@ fun SongSuggestions(flavorText: String, songViewModel: SongViewModel) {
             val songAlbumUri = songAttributes?.get(song)?.get("albumArtUri")
             val songTitle = songAttributes?.get(song)?.get("title")
             val songUri = songAttributes?.get(song)?.get("uri")
+            val songArtist = songAttributes?.get(song)?.get("artist")
 
             @Composable
             fun SongBox() {
@@ -226,10 +266,16 @@ fun SongSuggestions(flavorText: String, songViewModel: SongViewModel) {
                                     size = 18.dp
                                 )
                             ),
-                        songAlbumUri = songAlbumUri,
-                        songTitle = songTitle,
-                        songUri = songUri,
-                        rounding = 18.dp
+                        nowPlayingViewModel = nowPlayingViewModel,
+                        songMetadata = SongMetadata(
+                            songUri?.toUri(),
+                            songTitle,
+                            songArtist,
+                            songAlbumUri?.toUri()
+                        ),
+                        navController = navController,
+                        rounding = 18.dp,
+                        barViewModel = barViewModel
                     )
                 }
             }
@@ -245,9 +291,13 @@ fun AstrudHome(
     innerPadding: PaddingValues,
     songViewModel: SongViewModel = hiltViewModel<SongViewModel>(),
     barViewModel: AppBarViewModel = hiltViewModel<AppBarViewModel>(),
+    nowPlayingViewModel: NowPlayingViewModel = hiltViewModel<NowPlayingViewModel>(),
     scrollBehavior: TopAppBarScrollBehavior
 ) {
     AstrudTheme {
+        LaunchedEffect(Unit) {
+            barViewModel.onShowBars()
+        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -259,35 +309,32 @@ fun AstrudHome(
         ) {
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Spacer(modifier = Modifier.weight(1f))
-
                     Text(
                         text = "Speed Dial:",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 5.dp),
+                        modifier = Modifier.align(Alignment.CenterVertically),
                     )
-
-                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
 
             item {
-                AstrudDial(songViewModel)
+                AstrudDial(navController, songViewModel, barViewModel, nowPlayingViewModel)
             }
             // todo Actually make these different and interesting. 07/04/2025 -K
             item {
-                SongSuggestions("Suggestions:", songViewModel)
+                SongSuggestions(navController, "Suggestions:", songViewModel, nowPlayingViewModel, barViewModel)
             }
 
             item {
-                SongSuggestions("Recently Listened:", songViewModel)
+                SongSuggestions(navController, "Recently Listened:", songViewModel, nowPlayingViewModel, barViewModel)
             }
 
             item {
-                SongSuggestions("Recently Added:", songViewModel)
+                SongSuggestions(navController, "Recently Added:", songViewModel, nowPlayingViewModel, barViewModel)
             }
         }
     }

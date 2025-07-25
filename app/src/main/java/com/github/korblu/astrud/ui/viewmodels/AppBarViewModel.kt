@@ -11,6 +11,10 @@ import javax.inject.Inject
 @OptIn(ExperimentalMaterial3Api::class)
 @HiltViewModel
 class AppBarViewModel @Inject constructor() : ViewModel() {
+
+    private val _barVisibility = MutableStateFlow(true)
+    val barVisibility = _barVisibility.asStateFlow()
+
     private val _listBarState = MutableStateFlow(LazyListState())
     val listBarState = _listBarState.asStateFlow()
 
@@ -26,6 +30,18 @@ class AppBarViewModel @Inject constructor() : ViewModel() {
 
     fun onResetPlayedStatus() {
         _playedBarAnimation.value = false
+    }
+
+    fun onHideBars() {
+        _barVisibility.value = false
+    }
+
+    fun onShowBars() {
+        _barVisibility.value = true
+    }
+
+    fun onToggleBars() {
+        _barVisibility.value = !_barVisibility.value
     }
 
     fun onSetPlayedStatus() {

@@ -1,6 +1,5 @@
 package com.github.korblu.astrud.ui.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.korblu.astrud.data.datastore.UserPreferences
