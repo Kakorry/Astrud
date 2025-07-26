@@ -50,6 +50,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.material3.window.size.class1)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
@@ -80,6 +81,7 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.graphics.shapes)
     implementation(libs.protobuf.kotlin) {
         exclude(group = "com.google.protobuf", module = "protobuf-java")
     }
@@ -89,6 +91,8 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.fragment)
     ksp(libs.androidx.hilt.compiler)
     implementation(libs.protobuf.javalite)
+    // Extras Libraries:
+    implementation(libs.wavy.slider)
 }
 
 protobuf {

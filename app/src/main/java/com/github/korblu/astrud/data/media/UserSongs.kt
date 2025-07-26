@@ -16,9 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-// First code of bluu-chan guys, thank you AI for teaching
-// me how to use this API because otherwise...(gulp) 05/25/25
-
 class UserSongs(songViewModel: SongViewModel) {
     suspend fun getAllMetadata(context : Context, path: String) : List<Song> = withContext(
         Dispatchers.IO) {
@@ -210,7 +207,7 @@ class UserSongs(songViewModel: SongViewModel) {
 
             return@withContext counter
         } catch(e: Exception) {
-            Log.d("UserSongs", "Error in cursor query in getCollectionSize(): $e")
+            Log.e("UserSongs", "Error in cursor query in getCollectionSize(): $e")
         } finally {
             cursor?.close()
         }
@@ -238,6 +235,7 @@ class UserSongs(songViewModel: SongViewModel) {
         val projection = arrayOf(
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.ALBUM_ID
         )
@@ -271,11 +269,13 @@ class UserSongs(songViewModel: SongViewModel) {
                     it.moveToPosition(randomPosition)
 
                     val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
+                    val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                     val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
                     val albumIdColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
                     val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
 
                     val title : String? = it.getString(titleColumn)
+                    val artist : String? = it.getString(artistColumn)
                     val id : String = it.getString(idColumn)
                     val album : String = it.getString(albumColumn)
                     val albumId = it.getLong(albumIdColumn)
@@ -291,13 +291,14 @@ class UserSongs(songViewModel: SongViewModel) {
                     return@withContext mapOf(
                         "title" to title,
                         "uri" to songUri,
+                        "artist" to artist,
                         "album" to album,
                         "albumArtUri" to albumArtUri
                     )
                 }
             }
         } catch(e: Exception) {
-            Log.d("UserSongs", "Error in cursor query in getRandomSong(): $e")
+            Log.e("UserSongs", "Error in cursor query in getRandomSong(): $e")
         } finally {
             cursor?.close()
         }
@@ -373,7 +374,7 @@ class UserSongs(songViewModel: SongViewModel) {
                     sortOrder
                 )
             } catch(e: Exception) {
-                Log.d("SongIterator", "Failed to set up cursor query in setCursor(): $e")
+                Log.e("SongIterator", "Failed to set up cursor query in setCursor(): $e")
             }
         }
 
@@ -405,7 +406,7 @@ class UserSongs(songViewModel: SongViewModel) {
                     }
                 }
             } catch(e: Exception) {
-                Log.d("SongIterator", "Failure in getNextSong(): $e")
+                Log.e("SongIterator", "Failure in getNextSong(): $e")
             }
             return@withContext null
         }
