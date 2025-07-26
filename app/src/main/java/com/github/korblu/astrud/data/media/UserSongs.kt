@@ -135,11 +135,13 @@ class UserSongs(songViewModel: SongViewModel, val context: Context) {
                     it.moveToPosition(randomPosition)
 
                     val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
+                    val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                     val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
                     val albumIdColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
                     val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
 
                     val title : String? = it.getString(titleColumn)
+                    val artist: String? = it.getString(artistColumn)
                     val id : String = it.getString(idColumn)
                     val album : String = it.getString(albumColumn)
                     val albumId = it.getLong(albumIdColumn)
@@ -154,6 +156,7 @@ class UserSongs(songViewModel: SongViewModel, val context: Context) {
 
                     return@withContext mapOf(
                         "title" to title,
+                        "artist" to artist,
                         "uri" to songUri,
                         "album" to album,
                         "albumArtUri" to albumArtUri
