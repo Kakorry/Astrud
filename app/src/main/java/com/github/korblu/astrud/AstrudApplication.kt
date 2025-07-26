@@ -4,13 +4,12 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
+import android.provider.MediaStore
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
@@ -36,13 +35,17 @@ import androidx.graphics.shapes.CornerRounding
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.star
 import androidx.graphics.shapes.toPath
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
 import com.github.korblu.astrud.ui.viewmodels.NowPlayingViewModel
 import dagger.hilt.android.HiltAndroidApp
-import dagger.hilt.android.lifecycle.HiltViewModel
 
 object AppConstants {
+    val BASE_PROJECTION = arrayOf(
+        MediaStore.Audio.Media.TITLE,
+        MediaStore.Audio.Media.ARTIST,
+        MediaStore.Audio.Media._ID,
+        MediaStore.Audio.Media.ALBUM_ID,
+        MediaStore.Audio.Media.ALBUM,
+    )
     const val MEDIA_NOTIFICATION_CHANNEL_ID = "media_playback_channel"
     const val MEDIA_NOTIFICATION_ID = 1965
     class StarShape : Shape {
@@ -118,7 +121,6 @@ object AppConstants {
     }
 
     // For future use when handling screen size. -K 07/21/2025
-
     val SCREEN_WIDTH_DP_EXTRA_SMALL = 360.dp
     val SCREEN_WIDTH_DP_SMALL = 411.dp
     val SCREEN_WIDTH_DP_MEDIUM = 600.dp
