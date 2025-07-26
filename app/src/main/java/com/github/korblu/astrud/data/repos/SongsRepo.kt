@@ -1,40 +1,41 @@
 package com.github.korblu.astrud.data.repos
 
-import android.util.Log
 import com.github.korblu.astrud.data.room.SongsDao
-import com.github.korblu.astrud.data.room.Song
+import com.github.korblu.astrud.data.room.RoomSong
 
-// Main thing to check if you want to use database that stores all the songs.
+/**
+ * For using the "Songs" Room Database.
+ */
 class SongsRepo(private val songsDao: SongsDao) {
-    suspend fun addSong(song: List<Song>): List<Long> {
-        return songsDao.insert(song)
+    suspend fun addSong(roomSong: List<RoomSong>): List<Long> {
+        return songsDao.insert(roomSong)
     }
 
-    suspend fun updateSong(song: Song) : Int {
-        return songsDao.update(song)
+    suspend fun updateSong(roomSong: RoomSong) : Int {
+        return songsDao.update(roomSong)
     }
 
-    suspend fun deleteSong(song: Song) : Int {
-        return songsDao.delete(song)
+    suspend fun deleteSong(roomSong: RoomSong) : Int {
+        return songsDao.delete(roomSong)
     }
 
-    suspend fun getSongById(id : Long) : Song? {
+    suspend fun getSongById(id : Long) : RoomSong? {
         return songsDao.getSongById(id)
     }
 
-    suspend fun getAllSongs() : List<Song> {
+    suspend fun getAllSongs() : List<RoomSong> {
         return songsDao.getAllSongs()
     }
 
-    suspend fun getSongsByAlbum(albumName: String?) : List<Song> {
+    suspend fun getSongsByAlbum(albumName: String?) : List<RoomSong> {
         return songsDao.getSongsByAlbum(albumName)
     }
 
-    suspend fun getSongsByArtist(artist: String?) : List<Song> {
+    suspend fun getSongsByArtist(artist: String?) : List<RoomSong> {
         return songsDao.getSongsByArtist(artist)
     }
 
-    suspend fun getSongsByGenre(genre: String?) : List<Song> {
+    suspend fun getSongsByGenre(genre: String?) : List<RoomSong> {
         return songsDao.getSongsByGenre(genre)
     }
 }

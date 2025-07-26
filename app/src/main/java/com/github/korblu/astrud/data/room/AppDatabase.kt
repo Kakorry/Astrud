@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [Song::class],
+    entities = [RoomSong::class],
     version = 1,
     exportSchema = false
 )
@@ -17,10 +17,14 @@ abstract class AppDatabase : RoomDatabase(){
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        /** Disclaimer: I got this whole block from AI because it's Standard Boilerplate. Though
-          i do intend on learning exactly what this does in the future whenever i find myself
-          messing with database shenanigans again. bluu-chan's 07/05/25.
-          */
+        // Disclaimer: I got this whole block from AI because it's Standard Boilerplate. Though
+        // i do intend on learning exactly what this does in the future whenever i find myself
+        // messing with database shenanigans again. bluu-chan's 07/05/25.
+
+        // I am messing with database shenanigans again, and I still have absolutely no idea what
+        // this does. Actually not absolutely, I understand good part of it, but I would never be
+        // able to write this on my own. bluu-chan's 07/25/25
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
