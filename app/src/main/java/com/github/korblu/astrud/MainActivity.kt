@@ -300,15 +300,16 @@ fun BottomAppBarExtension(
 
     val encodedUri = Uri.encode(currentSong.value?.localConfiguration?.uri.toString())
     val encodedTitle = Uri.encode(currentSong.value?.mediaMetadata?.title.toString())
+    val encodedArtist = Uri.encode(currentSong.value?.mediaMetadata?.artist.toString())
     val encodedArtwork = Uri.encode(currentSong.value?.mediaMetadata?.artworkUri.toString())
 
     AnimatedVisibility(
-        visible = currentMediaItem != null && currentRoute != "NowPlayingScreen/{songUri}/{songTitle}/{albumArtwork}",
+        visible = currentMediaItem != null && currentRoute != "NowPlayingScreen/{songUri}/{songTitle}/{songArtist}/{albumArtwork}",
         modifier = Modifier
             .clickable(
                 onClick = {
                     barViewModel.onHideBars()
-                    navController.navigate("NowPlayingScreen/$encodedUri/$encodedTitle/$encodedArtwork")
+                    navController.navigate("NowPlayingScreen/$encodedUri/$encodedTitle/$encodedArtist/$encodedArtwork")
                 }
             )
             .heightIn(max = 70.dp),
@@ -617,10 +618,11 @@ fun AstrudApp(
                 }
 
                 composable(
-                    "NowPlayingScreen/{songUri}/{songTitle}/{albumArtwork}",
+                    "NowPlayingScreen/{songUri}/{songTitle}/{songArtist}/{albumArtwork}",
                     listOf(
                         navArgument("songUri") { type = NavType.StringType },
                         navArgument("songTitle") { type = NavType.StringType },
+                        navArgument("songArtist") { type = NavType.StringType },
                         navArgument("albumArtwork") {
                             type = NavType.StringType
                             nullable = true
@@ -630,6 +632,7 @@ fun AstrudApp(
                     exitTransition = { fadeOut(animationSpec = tween(500)) },
                 ) { backStackEntry ->
                     val songUri = Uri.decode((backStackEntry.arguments?.getString("songUri"))).toUri()
+                    val songArtist = Uri.decode((backStackEntry.arguments?.getString("songArtist")))
                     val songTitle = Uri.decode(backStackEntry.arguments?.getString("songTitle"))
                     val albumArtwork = Uri.decode(backStackEntry.arguments?.getString("albumArtwork")).toUri()
 
@@ -637,6 +640,7 @@ fun AstrudApp(
                         navController,
                         context,
                         songTitle,
+                        songArtist,
                         songUri,
                         albumArtwork
                     )
