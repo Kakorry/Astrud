@@ -1,12 +1,14 @@
 package com.github.korblu.astrud.ui.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.korblu.astrud.data.datastore.LayoutSong
+import com.github.korblu.astrud.data.datastore.LayoutSongs
 import com.github.korblu.astrud.data.datastore.UserPreferences
+import com.github.korblu.astrud.data.repos.LayoutSongsRepo
 import com.github.korblu.astrud.data.repos.SongsRepo
 import com.github.korblu.astrud.data.repos.UserPreferencesRepo
-import com.github.korblu.astrud.data.room.Song
+import com.github.korblu.astrud.data.room.RoomSong
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,11 +21,12 @@ import javax.inject.Inject
 @HiltViewModel
 class SongViewModel @Inject constructor(
     private val songsRepo: SongsRepo,
-    private val userPrefRepo: UserPreferencesRepo
+    private val userPrefRepo: UserPreferencesRepo,
+    private val layoutSongsRepo: LayoutSongsRepo
 ) : ViewModel() {
 
-    private val _randomSong = MutableStateFlow<Song?>(null)
-    val randomSong = _randomSong.asStateFlow()
+    private val _randomRoomSong = MutableStateFlow<RoomSong?>(null)
+    val randomRoomSong = _randomRoomSong.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
@@ -31,19 +34,22 @@ class SongViewModel @Inject constructor(
     private val _wasPermissionGiven = MutableStateFlow<Boolean?>(null)
     val wasPermissionGiven = _wasPermissionGiven.asStateFlow()
 
-    fun onUpdateSong(song: Song) {
+    private val _layoutSongObjectList = MutableStateFlow<List<LayoutSong>>(listOf())
+    val layoutSongObjectList = _layoutSongObjectList.asStateFlow()
+
+    fun onUpdateRoomSong(roomSong: RoomSong) {
         viewModelScope.launch {
-            songsRepo.updateSong(song)
+            songsRepo.updateSong(roomSong)
         }
     }
 
-    fun onDeleteSong(song: Song) {
+    fun onDeleteRoomSong(roomSong: RoomSong) {
         viewModelScope.launch {
-            songsRepo.deleteSong(song)
+            songsRepo.deleteSong(roomSong)
         }
     }
 
-    fun onGetSongById(id: Long) {
+    fun onGetRoomSongById(id: Long) {
         viewModelScope.launch {
             songsRepo.getSongById(id)
         }
@@ -60,6 +66,24 @@ class SongViewModel @Inject constructor(
     fun onPermissionChange(isGranted: Boolean) {
         viewModelScope.launch {
             _wasPermissionGiven.value = isGranted
+        }
+    }
+
+    fun onToLayoutSongObject(songs : List<Map<String, String?>>) {
+        viewModelScope.launch {
+            _layoutSongObjectList.value = layoutSongsRepo.toLayoutSongObject(songs)
+        }
+    }
+
+    fun onSetLayoutSongs(songsList : List<LayoutSong>) {
+        viewModelScope.launch {
+            layoutSongsRepo.setSongs(songsList)
+        }
+    }
+
+    fun onClearLayoutSongs() {
+        viewModelScope.launch {
+            layoutSongsRepo.clearSongs()
         }
     }
 }
