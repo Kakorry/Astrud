@@ -56,6 +56,7 @@ import coil3.request.fallback
 import coil3.request.placeholder
 import coil3.request.transitionFactory
 import coil3.transition.CrossfadeTransition
+import com.github.korblu.astrud.AppConstants
 import com.github.korblu.astrud.R
 import com.github.korblu.astrud.data.media.UserSongs
 import com.github.korblu.astrud.ui.theme.AstrudTheme
@@ -89,16 +90,17 @@ fun SongArtwork(
                     } else {
                         nowPlayingViewModel.playSong(
                             songMetadata.uri,
-                            songMetadata.title!!,
-                            songMetadata.artist!!,
+                            songMetadata.title ?: "Unknown",
+                            songMetadata.artist ?: "Unknown",
                             songMetadata.albumArtUri
                         )
 
                         val encodedUri = Uri.encode(songMetadata.uri.toString())
                         val encodedTitle = Uri.encode(songMetadata.title)
+                        val encodedArtist = Uri.encode(songMetadata.artist)
                         val encodedAlbumArtUri = Uri.encode(songMetadata.albumArtUri.toString())
                         barViewModel.onHideBars()
-                        navController.navigate("NowPlayingScreen/$encodedUri/$encodedTitle/$encodedAlbumArtUri")
+                        navController.navigate("NowPlayingScreen/$encodedUri/$encodedTitle/$encodedArtist/$encodedAlbumArtUri")
                     }
 
                 }
@@ -149,11 +151,17 @@ fun SongArtwork(
 @Composable
 fun getRandomSongs(songViewModel: SongViewModel, listSize: Int = 10): List<Map<String?, String?>?>? {
     val activity = LocalActivity.current as Activity
-    val userSongs = UserSongs(songViewModel)
+    val userSongs = UserSongs(songViewModel, activity)
     var songAttributes by remember { mutableStateOf<List<Map<String?, String?>?>?>( List (listSize) { mapOf ( null to null ) } ) }
 
     LaunchedEffect(true) {
-        songAttributes = List (listSize) { userSongs.getRandomSong(activity, true) }
+        userSongs.setCursor(
+            AppConstants.BASE_PROJECTION,
+            arrayOf("YEAR"),
+            "RANDOM"
+        )
+        songAttributes = List (listSize) { userSongs.getRandomSong() }
+        userSongs.closeCursor()
     }
 
     return songAttributes
