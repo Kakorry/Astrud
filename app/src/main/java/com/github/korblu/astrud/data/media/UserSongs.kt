@@ -16,9 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-// First code of bluu-chan guys, thank you AI for teaching
-// me how to use this API because otherwise...(gulp) 05/25/25
-
 class UserSongs(songViewModel: SongViewModel) {
     suspend fun getAllMetadata(context : Context, path: String) : List<Song> = withContext(
         Dispatchers.IO) {
@@ -210,7 +207,7 @@ class UserSongs(songViewModel: SongViewModel) {
 
             return@withContext counter
         } catch(e: Exception) {
-            Log.d("UserSongs", "Error in cursor query in getCollectionSize(): $e")
+            Log.e("UserSongs", "Error in cursor query in getCollectionSize(): $e")
         } finally {
             cursor?.close()
         }
@@ -301,7 +298,7 @@ class UserSongs(songViewModel: SongViewModel) {
                 }
             }
         } catch(e: Exception) {
-            Log.d("UserSongs", "Error in cursor query in getRandomSong(): $e")
+            Log.e("UserSongs", "Error in cursor query in getRandomSong(): $e")
         } finally {
             cursor?.close()
         }
@@ -377,7 +374,7 @@ class UserSongs(songViewModel: SongViewModel) {
                     sortOrder
                 )
             } catch(e: Exception) {
-                Log.d("SongIterator", "Failed to set up cursor query in setCursor(): $e")
+                Log.e("SongIterator", "Failed to set up cursor query in setCursor(): $e")
             }
         }
 
@@ -409,7 +406,7 @@ class UserSongs(songViewModel: SongViewModel) {
                     }
                 }
             } catch(e: Exception) {
-                Log.d("SongIterator", "Failure in getNextSong(): $e")
+                Log.e("SongIterator", "Failure in getNextSong(): $e")
             }
             return@withContext null
         }

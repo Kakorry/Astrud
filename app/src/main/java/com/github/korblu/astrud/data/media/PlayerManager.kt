@@ -48,13 +48,12 @@ class MediaService: MediaSessionService() {
             }
 
             override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                // Create an Intent to launch your app's MainActivity (or another specific Activity)
                 val openAppIntent = Intent(applicationContext, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 return PendingIntent.getActivity(
                     applicationContext,
-                    0, // requestCode
+                    0,
                     openAppIntent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
