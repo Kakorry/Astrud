@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.github.korblu.astrud.proto;
+
+option java_package = "com.github.korblu.astrud.data.datastore";
+option java_multiple_files = true;
+
+message LayoutSong {
+  string id = 1;
+  string title = 2;
+  string artist = 3;
+  string album = 4;
+  string uri = 7;
+  string album_art_uri = 8;
+}
+
+message LayoutSongsList {
+  repeated LayoutSong songs = 1;
+}
