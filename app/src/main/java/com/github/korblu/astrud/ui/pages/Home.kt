@@ -3,13 +3,15 @@ package com.github.korblu.astrud.ui.pages
 import android.app.Activity
 import android.net.Uri
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -60,12 +62,6 @@ import com.github.korblu.astrud.ui.theme.AstrudTheme
 import com.github.korblu.astrud.ui.viewmodels.AppBarViewModel
 import com.github.korblu.astrud.ui.viewmodels.NowPlayingViewModel
 import com.github.korblu.astrud.ui.viewmodels.SongViewModel
-
-/*
-    I can't tell if Jetpack Compose is really like this or I'm just unorganized.
-    Feels like a mess. Maybe UI Toolkits are just like this?
-    It is an intuitive to build mess, though. This is pretty fun. 05/23/2025
-*/
 
 data class SongMetadata(
     val uri: Uri?,
@@ -124,7 +120,11 @@ fun SongArtwork(
             contentScale = scale,
         )
 
-        if (songMetadata.title != null) {
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            visible = songMetadata.title != null,
+            enter = fadeIn(tween(300)),
+        ) {
             Box(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.onSecondary)
@@ -134,7 +134,7 @@ fun SongArtwork(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = songMetadata.title,
+                    text = songMetadata.title ?: "Unknown",
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1,
