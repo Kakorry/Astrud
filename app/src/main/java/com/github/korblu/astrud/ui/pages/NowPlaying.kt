@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -56,6 +57,7 @@ fun NowPlaying(
     navController: NavController,
     context: Context,
     title: String? = "Unknown",
+    artist: String? = "Unknown",
     uri: Uri?,
     artwork: Uri?
 ) {
@@ -101,17 +103,34 @@ fun NowPlaying(
                             contentScale = ContentScale.Crop,
                         )
 
-                        Text(
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
                                 .widthIn(max = 380.dp)
+                                .fillMaxWidth()
                                 .padding(top = 20.dp)
-                                .basicMarquee(iterations = Int.MAX_VALUE, repeatDelayMillis = 400),
-                            text = title ?: "Unknown",
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        ) {
+                            Text(
+                                modifier = Modifier
+                                    .basicMarquee(iterations = Int.MAX_VALUE, repeatDelayMillis = 400),
+                                text = title ?: "Unknown",
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                            Text(
+                                modifier = Modifier
+                                    .basicMarquee(iterations = Int.MAX_VALUE, repeatDelayMillis = 400),
+                                text = artist ?: "Unknown",
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.Light,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
 
                         val songPosition by nowPlayingViewModel.currentPosition.collectAsState()
                         val songDuration by nowPlayingViewModel.fullDuration.collectAsState()
@@ -142,8 +161,8 @@ fun NowPlaying(
                                     sliderPosition = it
                                     nowPlayingViewModel.seekTo((it * songDuration.toFloat()).toLong())
                                 },
-                            waveLength = 23.dp,
-                            waveHeight = 16.dp,
+                            waveLength = 36.dp,
+                            waveHeight = 8.dp,
                             waveThickness = 4.dp,
                             trackThickness = 4.dp,
                         )
