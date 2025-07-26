@@ -27,6 +27,7 @@ navVersion = "2.9.2"
 protobuf = "4.31.1"
 roomCompiler = "2.7.2"
 roomRuntime = "2.7.2"
+compiler = "3.2.0-alpha11"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -69,6 +70,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { module = "com.google.android.material:material", version.ref = "material" }
 protobuf-kotlin = { module = "com.google.protobuf:protobuf-kotlin", version.ref = "protobuf" }
 protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf" }
+androidx-compiler = { group = "androidx.databinding", name = "compiler", version.ref = "compiler" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
