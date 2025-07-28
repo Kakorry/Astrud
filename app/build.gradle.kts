@@ -41,6 +41,10 @@ android {
     buildFeatures {
         compose = true
     }
+
+    ksp {
+        arg("room.schemaLocation", "${layout.buildDirectory.asFile.get().absolutePath}/schemas")
+    }
 }
 
 dependencies {
