@@ -4,14 +4,16 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.github.korblu.astrud.data.room.dao.RoomRecentsDao
+import com.github.korblu.astrud.data.room.entity.RoomRecents
 
 @Database(
-    entities = [RoomSong::class],
-    version = 1,
-    exportSchema = false
+    entities = [RoomRecents::class],
+    version = 2,
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase(){
-    abstract fun songDao() : SongsDao
+    abstract fun roomRecentsDao() : RoomRecentsDao
 
     companion object {
         @Volatile
@@ -32,6 +34,7 @@ abstract class AppDatabase : RoomDatabase(){
                     AppDatabase::class.java,
                     "astrud_app_db"
                 )
+                    .addMigrations(MIGRATION_1_2)
                     .build()
                 INSTANCE = instance
                 instance
