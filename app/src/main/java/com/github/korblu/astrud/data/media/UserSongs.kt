@@ -10,15 +10,13 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.github.korblu.astrud.ui.viewmodels.SongViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
 
 // First code of bluu-chan guys, thank you AI for teaching
 // me how to use this API because otherwise...(gulp) 05/25/25
 
-class UserSongs(songViewModel: SongViewModel, val context: Context) {
+class UserSongs(val context: Context) {
     /** IMPORTANT: DON'T FORGET TO CLOSE THE CURSOR WHEN ACTIVITY IS DESTROYED */
     private var cursor : Cursor? = null
     private var getNextSongPosition = -1
