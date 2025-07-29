@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.net.Uri
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.basicMarquee
@@ -30,7 +29,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -150,10 +148,6 @@ fun NowPlaying(
                             }
                         }
 
-                        LaunchedEffect(songPosition) {
-                            Log.d("SongPage", currentProgress.toString())
-                        }
-
                         var sliderPosition = currentProgress
 
                         WavySlider3(
@@ -168,10 +162,13 @@ fun NowPlaying(
                                     sliderPosition = it
                                     playerViewModel.seekTo((it * songDuration.toFloat()).toLong())
                                 },
+                            onValueChangeFinished = {
+                                playerViewModel.playPause()
+                            },
                             waveLength = 36.dp,
                             waveHeight = 8.dp,
                             waveThickness = 4.dp,
-                            trackThickness = 4.dp,
+                            trackThickness = 8.dp,
                         )
 
                         Box(
@@ -182,7 +179,9 @@ fun NowPlaying(
                                     .align(Alignment.CenterStart)
                                     .padding(top = 35.dp, start = 50.dp)
                                     .size(45.dp),
-                                onClick = {}
+                                onClick = {
+                                    playerViewModel.skipToPrevious()
+                                }
                             ) {
                                 Icon(
                                     modifier = Modifier.fillMaxSize(),
@@ -205,7 +204,9 @@ fun NowPlaying(
                                     .align(Alignment.CenterEnd)
                                     .padding(top = 35.dp, end = 50.dp)
                                     .size(45.dp),
-                                onClick = {}
+                                onClick = {
+                                    playerViewModel.skipToNext()
+                                }
                             ) {
                                 Icon(
                                     modifier = Modifier.fillMaxSize(),
