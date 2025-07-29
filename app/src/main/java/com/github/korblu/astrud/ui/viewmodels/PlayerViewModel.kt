@@ -27,13 +27,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class NowPlayingViewModel @Inject constructor(
+class PlayerViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private companion object {
         const val TAG = "NowPlayingViewModel"
-        const val POSITION_UPDATE_INTERVAL_MS = 100L
+        const val POSITION_UPDATE_INTERVAL_MS = 50L
     }
 
     private var mediaControllerFuture: ListenableFuture<MediaController>? = null
@@ -222,6 +222,7 @@ class NowPlayingViewModel @Inject constructor(
             Log.w(TAG, "MediaController not connected. Cannot seek.")
             return
         }
+        _mediaController?.pause()
         _mediaController?.seekTo(positionMs)
         _currentPosition.value = positionMs
         Log.d(TAG, "Seeking to: $positionMs ms")
@@ -241,7 +242,12 @@ class NowPlayingViewModel @Inject constructor(
             Log.w(TAG, "MediaController not connected. Cannot skip to previous.")
             return
         }
-        _mediaController?.seekToPreviousMediaItem()
+        if (_mediaController?.hasPreviousMediaItem() == true) {
+            seekTo(0)
+        } else {
+            _mediaController?.seekTo(0)
+            _currentPosition.value = 0
+        }
         Log.d(TAG, "Skipping to previous media item.")
     }
 
