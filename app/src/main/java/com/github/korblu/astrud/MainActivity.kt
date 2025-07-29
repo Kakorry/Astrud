@@ -1,10 +1,12 @@
 package com.github.korblu.astrud
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -57,9 +59,13 @@ class MainActivity : ComponentActivity() {
     ) { isGranted : Boolean ->
         audioPermissionHelper.handleResult(isGranted)
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge(navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT))
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        window.isNavigationBarContrastEnforced = false
+
         setContent {
             val songViewModel = hiltViewModel<SongViewModel>()
             val barViewModel= hiltViewModel<AppBarViewModel>()
@@ -188,8 +194,7 @@ fun AstrudApp(
                     }
                     AstrudHeader(
                         navController = navController,
-                        scrollBehavior = scrollBehavior,
-                        barViewModel
+                        scrollBehavior = scrollBehavior
                     )
                 }
             }
