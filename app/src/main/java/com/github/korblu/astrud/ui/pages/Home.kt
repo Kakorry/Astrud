@@ -1,6 +1,7 @@
 package com.github.korblu.astrud.ui.pages
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -32,6 +33,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelStoreOwner
@@ -288,63 +292,84 @@ fun AstrudHome(
         val homeViewModel = hiltViewModel<HomeViewModel>(
             LocalActivity.current as ViewModelStoreOwner
         )
-        val suggestionsUserSongs = UserSongs(songViewModel, LocalContext.current)
-        val dialUserSongs = UserSongs(songViewModel, LocalContext.current)
+        val suggestionsUserSongs = UserSongs(LocalContext.current)
+        val dialUserSongs = UserSongs(LocalContext.current)
         val lazyState by homeViewModel.homeListState.collectAsState()
 
         LaunchedEffect(Unit) {
             barViewModel.onShowBars()
             homeViewModel.getRandomDial(dialUserSongs)
             homeViewModel.getRandomSuggestions(suggestionsUserSongs)
+            songViewModel.onGetLibrarySize()
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(innerPadding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top,
-            state = lazyState
-        ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+        val librarySize by songViewModel.librarySize.collectAsState()
+        Log.d("LibrarySize", librarySize.toString())
+
+        librarySize?.let {
+            if (it >= 10) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                        .padding(innerPadding),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top,
+                    state = lazyState
+                ) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Speed Dial:",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.align(Alignment.CenterVertically),
+                            )
+                        }
+                    }
+
+                    item(
+                        key = "speedDial"
+                    ) {
+                        AstrudDial(navController, songViewModel, barViewModel, playerViewModel)
+                    }
+                    // todo Actually make these different and interesting. 07/04/2025 -K
+                    item(
+                        key = "suggestions"
+                    ) {
+                        SongSuggestions(navController, "Suggestions:", playerViewModel, barViewModel)
+                    }
+
+                    item(
+                        key = "recentlyListened"
+                    ) {
+                        SongSuggestions(navController, "Recently Listened:", playerViewModel, barViewModel)
+                    }
+
+                    item (
+                        key = "recentlyAdded"
+                    ){
+                        SongSuggestions(navController, "Recently Added:", playerViewModel, barViewModel)
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Text(
-                        text = "Speed Dial:",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.CenterVertically),
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.primary,
+                        text = "Maybe u should download more songs :p",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
-
-            item(
-                key = "speedDial"
-            ) {
-                AstrudDial(navController, songViewModel, barViewModel, playerViewModel)
-            }
-            // todo Actually make these different and interesting. 07/04/2025 -K
-            item(
-                key = "suggestions"
-            ) {
-                SongSuggestions(navController, "Suggestions:", playerViewModel, barViewModel)
-            }
-
-            item(
-                key = "recentlyListened"
-            ) {
-                SongSuggestions(navController, "Recently Listened:", playerViewModel, barViewModel)
-            }
-
-            item (
-                key = "recentlyAdded"
-            ){
-                SongSuggestions(navController, "Recently Added:", playerViewModel, barViewModel)
-            }
         }
+
     }
 }
 
