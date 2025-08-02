@@ -5,7 +5,6 @@ import com.github.korblu.astrud.data.room.dao.RoomRecentsDao
 import com.github.korblu.astrud.data.room.entity.RoomRecents
 import com.github.korblu.astrud.data.room.pojo.LastPlayedAlbumsInfo
 import com.github.korblu.astrud.data.room.pojo.LastPlayedArtistsInfo
-import kotlinx.coroutines.flow.Flow
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -15,10 +14,6 @@ class RoomRecentsRepo (private val recentsDao: RoomRecentsDao){
 
     suspend fun insertOrUpdate(song: RoomRecents) {
         recentsDao.insertOrUpdate(song)
-    }
-
-    fun getMostRecentsFlow(limit: Int) : Flow<List<RoomRecents>> {
-        return recentsDao.getMostRecentsFlow(limit)
     }
 
     suspend fun getMostRecents(limit: Int) : List<RoomRecents> {

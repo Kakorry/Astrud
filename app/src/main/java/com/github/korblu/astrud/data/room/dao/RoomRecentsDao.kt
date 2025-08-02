@@ -15,9 +15,6 @@ interface RoomRecentsDao {
     suspend fun insertOrUpdate(song: RoomRecents)
 
     @Query("SELECT * FROM recents ORDER BY lastPlayedTimestamp DESC LIMIT :limit")
-    fun getMostRecentsFlow(limit: Int) : Flow<List<RoomRecents>>
-
-    @Query("SELECT * FROM recents ORDER BY lastPlayedTimestamp DESC LIMIT :limit")
     suspend fun getMostRecents(limit: Int) : List<RoomRecents>
 
     @Query("SELECT * FROM recents WHERE songId = :songId")
