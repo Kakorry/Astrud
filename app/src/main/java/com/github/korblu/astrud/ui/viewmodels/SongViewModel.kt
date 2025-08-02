@@ -1,10 +1,12 @@
 package com.github.korblu.astrud.ui.viewmodels
 
+import android.content.Context
+import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.korblu.astrud.data.datastore.LayoutSong
-import com.github.korblu.astrud.data.datastore.LayoutSongs
 import com.github.korblu.astrud.data.datastore.UserPreferences
+import com.github.korblu.astrud.data.media.UserSongs
 import com.github.korblu.astrud.data.repos.LayoutSongsRepo
 import com.github.korblu.astrud.data.repos.RoomRecentsRepo
 import com.github.korblu.astrud.data.repos.UserPreferencesRepo
@@ -12,6 +14,7 @@ import com.github.korblu.astrud.data.room.entity.RoomRecents
 import com.github.korblu.astrud.data.room.pojo.LastPlayedAlbumsInfo
 import com.github.korblu.astrud.data.room.pojo.LastPlayedArtistsInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,12 +25,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SongViewModel @Inject constructor(
-    private val userPrefRepo: UserPreferencesRepo,
+    @ApplicationContext private val context: Context,
+    userPrefRepo: UserPreferencesRepo,
     private val layoutSongsRepo: LayoutSongsRepo,
     private val recentsRepo: RoomRecentsRepo
 ) : ViewModel() {
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
+
+    private val _librarySize = MutableStateFlow<Int?>(null)
+    val librarySize = _librarySize.asStateFlow()
 
     private val _wasPermissionGiven = MutableStateFlow<Boolean?>(null)
     val wasPermissionGiven = _wasPermissionGiven.asStateFlow()
@@ -83,6 +90,21 @@ class SongViewModel @Inject constructor(
     fun onClearLayoutSongs() {
         viewModelScope.launch {
             layoutSongsRepo.clearSongs()
+        }
+    }
+
+    fun onGetLibrarySize() {
+        viewModelScope.launch {
+            val userSongs = UserSongs(context)
+            userSongs.setCursor(
+                projection = arrayOf(
+                    MediaStore.Audio.Media.TITLE
+                ),
+                sort = "ASC"
+            )
+            val currentLibrarySize = userSongs.getCollectionSize()
+            _librarySize.value = currentLibrarySize
+            userSongs.closeCursor()
         }
     }
 

@@ -4,26 +4,31 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.net.Uri
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -48,7 +53,7 @@ import coil3.request.transitionFactory
 import coil3.transition.CrossfadeTransition
 import com.github.korblu.astrud.AppConstants
 import com.github.korblu.astrud.R
-import com.github.korblu.astrud.ui.viewmodels.NowPlayingViewModel
+import com.github.korblu.astrud.ui.viewmodels.PlayerViewModel
 import ir.mahozad.multiplatform.wavyslider.material3.WavySlider as WavySlider3
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
@@ -66,7 +71,7 @@ fun NowPlaying(
     val widthSizeClass = windowSizeClass.widthSizeClass // For future use when I decide to fix other layouts -K 07/21/2025
 
     val isRotated = LocalConfiguration.current.orientation == ORIENTATION_LANDSCAPE
-    val nowPlayingViewModel = hiltViewModel<NowPlayingViewModel>(
+    val playerViewModel = hiltViewModel<PlayerViewModel>(
         LocalActivity.current as ComponentActivity
     )
 
@@ -132,8 +137,8 @@ fun NowPlaying(
                             )
                         }
 
-                        val songPosition by nowPlayingViewModel.currentPosition.collectAsState()
-                        val songDuration by nowPlayingViewModel.fullDuration.collectAsState()
+                        val songPosition by playerViewModel.currentPosition.collectAsState()
+                        val songDuration by playerViewModel.fullDuration.collectAsState()
 
                         val currentProgress = remember(songPosition, songDuration) {
                             if (songDuration > 0L) {
@@ -141,10 +146,6 @@ fun NowPlaying(
                             } else {
                                 0f
                             }
-                        }
-
-                        LaunchedEffect(songPosition) {
-                            Log.d("SongPage", currentProgress.toString())
                         }
 
                         var sliderPosition = currentProgress
@@ -159,19 +160,62 @@ fun NowPlaying(
                             onValueChange =
                                 {
                                     sliderPosition = it
-                                    nowPlayingViewModel.seekTo((it * songDuration.toFloat()).toLong())
+                                    playerViewModel.seekTo((it * songDuration.toFloat()).toLong())
                                 },
+                            onValueChangeFinished = {
+                                playerViewModel.playPause()
+                            },
                             waveLength = 36.dp,
                             waveHeight = 8.dp,
                             waveThickness = 4.dp,
-                            trackThickness = 4.dp,
+                            trackThickness = 8.dp,
                         )
 
-                        AppConstants.StarButton(
-                            nowPlayingViewModel = nowPlayingViewModel,
-                            buttonSize = 140.dp,
-                            modifier = Modifier.padding(top = 40.dp)
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            IconButton(
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .padding(top = 35.dp, start = 50.dp)
+                                    .size(45.dp),
+                                onClick = {
+                                    playerViewModel.skipToPrevious()
+                                }
+                            ) {
+                                Icon(
+                                    modifier = Modifier.fillMaxSize(),
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    imageVector = Icons.Filled.SkipPrevious,
+                                    contentDescription = "Previous"
+                                )
+                            }
+
+                            AppConstants.StarButton(
+                                playerViewModel = playerViewModel,
+                                buttonSize = 140.dp,
+                                modifier = Modifier
+                                    .padding(top = 40.dp)
+                                    .align(Alignment.Center)
+                            )
+
+                            IconButton(
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .padding(top = 35.dp, end = 50.dp)
+                                    .size(45.dp),
+                                onClick = {
+                                    playerViewModel.skipToNext()
+                                }
+                            ) {
+                                Icon(
+                                    modifier = Modifier.fillMaxSize(),
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    imageVector = Icons.Filled.SkipNext,
+                                    contentDescription = "Skip"
+                                )
+                            }
+                        }
                     }
                 }
             }

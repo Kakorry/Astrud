@@ -30,12 +30,12 @@ import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import com.github.korblu.astrud.ui.viewmodels.PlayerViewModel
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.CornerRounding
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.star
 import androidx.graphics.shapes.toPath
-import com.github.korblu.astrud.ui.viewmodels.NowPlayingViewModel
 import dagger.hilt.android.HiltAndroidApp
 
 object AppConstants {
@@ -72,13 +72,13 @@ object AppConstants {
     @Composable
     fun StarButton(
         modifier: Modifier = Modifier,
-        primary: Color = MaterialTheme.colorScheme.primary,
+        buttonColor: Color = MaterialTheme.colorScheme.primary,
+        iconColor: Color = MaterialTheme.colorScheme.onPrimary,
         buttonSize: Dp = 150.dp,
         star: StarShape = StarShape(),
-        nowPlayingViewModel: NowPlayingViewModel
+        playerViewModel: PlayerViewModel
         ) {
         Box(
-            contentAlignment = Alignment.Center,
             modifier = modifier
                 .heightIn(max = buttonSize)
                 .widthIn(max = buttonSize)
@@ -97,7 +97,7 @@ object AppConstants {
                     )
                     val path = shape.toPath().asComposePath()
                     onDrawBehind {
-                        drawPath(path, color = primary)
+                        drawPath(path, color = buttonColor)
                     }
                 }
                 .aspectRatio(1f)
@@ -105,27 +105,29 @@ object AppConstants {
                 .clickable(
                     enabled = true,
                     onClick = {
-                        nowPlayingViewModel.playPause()
+                        playerViewModel.playPause()
                     },
                 )
         ) {
             Icon(
-                modifier = Modifier.size(buttonSize / 2),
-                imageVector = if (nowPlayingViewModel.isPlaying.collectAsState().value) {
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(buttonSize / 2),
+                imageVector = if (playerViewModel.isPlaying.collectAsState().value) {
                     Icons.Rounded.Pause
                 } else Icons.Rounded.PlayArrow,
-                tint = MaterialTheme.colorScheme.onPrimary,
+                tint = iconColor,
                 contentDescription = "Play"
             )
         }
     }
 
     // For future use when handling screen size. -K 07/21/2025
-    val SCREEN_WIDTH_DP_EXTRA_SMALL = 360.dp
-    val SCREEN_WIDTH_DP_SMALL = 411.dp
-    val SCREEN_WIDTH_DP_MEDIUM = 600.dp
-    val SCREEN_WIDTH_DP_LARGE = 840.dp
-    val SCREEN_WIDTH_DP_EXTRA_LARGE = 1200.dp
+    val SCREEN_WIDTH_DP_EXTRA_SMALL = 240.dp
+    val SCREEN_WIDTH_DP_SMALL = 360.dp
+    val SCREEN_WIDTH_DP_MEDIUM = 432.dp
+    val SCREEN_WIDTH_DP_LARGE = 640.dp
+    val SCREEN_WIDTH_DP_EXTRA_LARGE = 1280.dp
 }
 
 @HiltAndroidApp
