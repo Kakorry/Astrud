@@ -6,7 +6,11 @@ import com.github.korblu.astrud.data.datastore.LayoutSong
 import com.github.korblu.astrud.data.datastore.LayoutSongs
 import com.github.korblu.astrud.data.datastore.UserPreferences
 import com.github.korblu.astrud.data.repos.LayoutSongsRepo
+import com.github.korblu.astrud.data.repos.RoomRecentsRepo
 import com.github.korblu.astrud.data.repos.UserPreferencesRepo
+import com.github.korblu.astrud.data.room.entity.RoomRecents
+import com.github.korblu.astrud.data.room.pojo.LastPlayedAlbumsInfo
+import com.github.korblu.astrud.data.room.pojo.LastPlayedArtistsInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SongViewModel @Inject constructor(
     private val userPrefRepo: UserPreferencesRepo,
-    private val layoutSongsRepo: LayoutSongsRepo
+    private val layoutSongsRepo: LayoutSongsRepo,
+    private val recentsRepo: RoomRecentsRepo
 ) : ViewModel() {
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
@@ -29,6 +34,25 @@ class SongViewModel @Inject constructor(
 
     private val _layoutSongObjectList = MutableStateFlow<List<LayoutSong>>(listOf())
     val layoutSongObjectList = _layoutSongObjectList.asStateFlow()
+
+    private val _recentSongsFlow = MutableStateFlow<List<RoomRecents>>(listOf())
+    val recentSongsFlow = _recentSongsFlow.asStateFlow()
+
+    private val _recentAlbumsFlow = MutableStateFlow<List<LastPlayedAlbumsInfo>>(listOf())
+    val recentAlbumsFlow = _recentAlbumsFlow.asStateFlow()
+
+    private val _recentArtistsFlow = MutableStateFlow<List<LastPlayedArtistsInfo>>(listOf())
+    val recentArtistsFlow = _recentArtistsFlow.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _recentSongsFlow.value = recentsRepo.getMostRecents(30)
+
+            _recentAlbumsFlow.value = recentsRepo.getLastPlayedAlbums(30)
+
+            _recentArtistsFlow.value = recentsRepo.getLastPlayedArtists(30)
+        }
+    }
 
     // For tests. Will probably be removed.
     val userPreferences: StateFlow<UserPreferences> = userPrefRepo.userPreferencesFlow
@@ -61,4 +85,12 @@ class SongViewModel @Inject constructor(
             layoutSongsRepo.clearSongs()
         }
     }
+
+    fun onInsertRecents(song: RoomRecents) {
+        viewModelScope.launch {
+            recentsRepo.insertOrUpdate(song)
+        }
+    }
+
+
 }
