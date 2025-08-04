@@ -1,5 +1,6 @@
 package com.github.korblu.astrud.ui.pages
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,7 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -23,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,11 +31,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.github.korblu.astrud.R
+import com.github.korblu.astrud.ui.pages.components.NowPlayingListener
 import com.github.korblu.astrud.ui.viewmodels.AppBarViewModel
+import com.github.korblu.astrud.ui.viewmodels.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +51,7 @@ fun Options() {
             onClick = { expanded = !expanded }
         ) {
             Icon(
-                imageVector = Icons.Filled.FilterAlt,
+                painter = painterResource(R.drawable.ic_filter_alt),
                 tint = MaterialTheme.colorScheme.onSurface,
                 contentDescription = "Filter Songs"
             )
@@ -90,12 +94,22 @@ fun Options() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AstrudSongList(innerPadding: PaddingValues, scrollBehavior: TopAppBarScrollBehavior, barViewModel: AppBarViewModel) {
+fun AstrudSongList(
+    innerPadding: PaddingValues,
+    navController: NavController,
+    barViewModel: AppBarViewModel = hiltViewModel<AppBarViewModel>(),
+    playerViewModel: PlayerViewModel = hiltViewModel<PlayerViewModel>()
+) {
+    NowPlayingListener(
+        barViewModel,
+        playerViewModel,
+        navController
+    )
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .padding(innerPadding),
+            .padding(innerPadding)
+            .animateContentSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
         state = barViewModel.listBarState.collectAsState().value
@@ -109,7 +123,7 @@ fun AstrudSongList(innerPadding: PaddingValues, scrollBehavior: TopAppBarScrollB
         items(songs) { song ->
             Box(
                 modifier = Modifier
-                    .padding(start = 10.dp, end = 10.dp, top = 15.dp, bottom = 15.dp)
+                    .padding(horizontal = 10.dp, vertical = 15.dp)
                     .heightIn(max = 70.dp)
                     .widthIn(max = 430.dp)
                     .fillMaxSize()
