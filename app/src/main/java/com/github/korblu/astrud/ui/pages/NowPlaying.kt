@@ -17,9 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,9 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,8 +50,9 @@ import coil3.request.fallback
 import coil3.request.placeholder
 import coil3.request.transitionFactory
 import coil3.transition.CrossfadeTransition
-import com.github.korblu.astrud.AppConstants
 import com.github.korblu.astrud.R
+import com.github.korblu.astrud.ui.pages.components.StarButton
+import com.github.korblu.astrud.ui.viewmodels.AppBarViewModel
 import com.github.korblu.astrud.ui.viewmodels.PlayerViewModel
 import ir.mahozad.multiplatform.wavyslider.material3.WavySlider as WavySlider3
 
@@ -79,10 +79,19 @@ fun NowPlaying(
     fun SongPage(
         isLandscape: Boolean = false
     ) {
+        val barViewModel = hiltViewModel<AppBarViewModel>(
+            activity as ComponentActivity
+        )
+        barViewModel.onSetMediaItemVisibility()
+        barViewModel.onHideBars()
+        barViewModel.onResetNowPlaying()
+
         if (!isLandscape) {
-            Scaffold { innerPadding ->
+            Scaffold(
+                containerColor = Color.Transparent
+            ){ innerPadding ->
                 Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    color = MaterialTheme.colorScheme.surface,
                     ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -117,7 +126,7 @@ fun NowPlaying(
                         ) {
                             Text(
                                 modifier = Modifier
-                                    .basicMarquee(iterations = Int.MAX_VALUE, repeatDelayMillis = 400),
+                                    .basicMarquee(iterations = Int.MAX_VALUE, repeatDelayMillis = 0),
                                 text = title ?: "Unknown",
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.titleLarge,
@@ -127,7 +136,7 @@ fun NowPlaying(
 
                             Text(
                                 modifier = Modifier
-                                    .basicMarquee(iterations = Int.MAX_VALUE, repeatDelayMillis = 400),
+                                    .basicMarquee(iterations = Int.MAX_VALUE, repeatDelayMillis = 0),
                                 text = artist ?: "Unknown",
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.titleLarge,
@@ -167,7 +176,8 @@ fun NowPlaying(
                             },
                             waveLength = 36.dp,
                             waveHeight = 8.dp,
-                            waveThickness = 4.dp,
+                            incremental = false,
+                            waveThickness = 6.dp,
                             trackThickness = 8.dp,
                         )
 
@@ -186,12 +196,12 @@ fun NowPlaying(
                                 Icon(
                                     modifier = Modifier.fillMaxSize(),
                                     tint = MaterialTheme.colorScheme.onSurface,
-                                    imageVector = Icons.Filled.SkipPrevious,
+                                    painter = painterResource(R.drawable.ic_skip_previous),
                                     contentDescription = "Previous"
                                 )
                             }
 
-                            AppConstants.StarButton(
+                            StarButton(
                                 playerViewModel = playerViewModel,
                                 buttonSize = 140.dp,
                                 modifier = Modifier
@@ -211,7 +221,7 @@ fun NowPlaying(
                                 Icon(
                                     modifier = Modifier.fillMaxSize(),
                                     tint = MaterialTheme.colorScheme.onSurface,
-                                    imageVector = Icons.Filled.SkipNext,
+                                    painter = painterResource(R.drawable.ic_skip_next),
                                     contentDescription = "Skip"
                                 )
                             }
@@ -224,7 +234,7 @@ fun NowPlaying(
 
     Scaffold { innerPadding ->
         Surface(
-            color = MaterialTheme.colorScheme.surfaceContainerLowest
+            color = MaterialTheme.colorScheme.surface
         ) {
             Column(
                 modifier = Modifier
