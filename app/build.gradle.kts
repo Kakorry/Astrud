@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.application") version "8.11.1"
+    id("com.android.application") version "8.12.0"
     id("org.jetbrains.kotlin.android") version "2.2.0"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
     kotlin("plugin.serialization") version "2.0.21"
@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compiler)
+    implementation(libs.androidx.animation.graphics.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,7 +73,6 @@ dependencies {
     implementation(libs.androidx.navigation.dynamic.features.fragment)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.navigation.compose.v290)
-    implementation(libs.androidx.material.icons.extended)
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     androidTestImplementation(libs.androidx.navigation.testing)

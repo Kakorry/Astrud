@@ -1,6 +1,7 @@
-package com.github.korblu.astrud.ui.pages
+package com.github.korblu.astrud.ui.pages.composables
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.annotation.Keep
@@ -11,6 +12,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -18,12 +21,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Album
@@ -32,6 +37,10 @@ import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Album
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LibraryMusic
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,9 +48,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,9 +72,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.error
@@ -72,7 +80,6 @@ import coil3.request.fallback
 import coil3.request.placeholder
 import coil3.request.transitionFactory
 import coil3.transition.CrossfadeTransition
-import com.github.korblu.astrud.AppConstants
 import com.github.korblu.astrud.R
 import com.github.korblu.astrud.ui.viewmodels.AppBarViewModel
 import com.github.korblu.astrud.ui.viewmodels.PlayerViewModel
@@ -84,6 +91,13 @@ fun AstrudHeader(
     scrollBehavior: TopAppBarScrollBehavior,
 ) {
     CenterAlignedTopAppBar(
+        colors = TopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+            navigationIconContentColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.primaryContainer
+        ),
         scrollBehavior = scrollBehavior,
         title = {
             Row(
@@ -93,7 +107,7 @@ fun AstrudHeader(
                 IconButton(
                     onClick = {},
                     modifier = Modifier
-                        .padding(start = 5.dp)
+                        .padding(start = 4.dp)
                         .size(25.dp)
                 ) {
                     Icon(
@@ -128,7 +142,7 @@ fun AstrudHeader(
                 IconButton(
                     onClick = {},
                     modifier = Modifier
-                        .padding(end = 5.dp)
+                        .padding(end = 4.dp)
                         .size(25.dp)
                 ) {
                     Icon(
@@ -139,92 +153,96 @@ fun AstrudHeader(
                 }
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            scrolledContainerColor = MaterialTheme.colorScheme.inverseOnSurface,
-            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface,
-            actionIconContentColor = MaterialTheme.colorScheme.onSurface
-        ),
     ) }
 
 @Composable
 fun BottomBarIconButton(
-    navController: NavController,
-    targetRoute: String = "I'm gonna crash your ass!!",
-    icon: ImageVector = Icons.Filled.Home,
+    targetPage: Int = 0,
+    pagerState: PagerState,
+    filledIcon: ImageVector = Icons.Filled.Home,
+    outlinedIcon: ImageVector = Icons.Outlined.Home,
     description: String = "Funny Little Place"
 ) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    // TODO: Animate the stupid icons so they go pwoing pwoing or something like that.
+    //  Or maybe not if I'm too lazy idk. -K 07/31/2025
+    val selected = pagerState.currentPage == targetPage
 
-    val selectedPrimary = if (currentRoute == targetRoute) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
+    Column(
+        modifier = Modifier.fillMaxHeight(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val icon = if (selected) filledIcon else outlinedIcon
 
-    IconButton(
-        onClick = {
-            if (currentRoute != targetRoute) {
-                navController.navigate(targetRoute) {
-                    val startDestinationRoute = navController.graph.findStartDestination().route
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(if (selected) {
+                    MaterialTheme.colorScheme.secondaryContainer
+                } else {
+                    if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surfaceContainerLow
+                })
+        ) {
+            val triggerEffect = remember { mutableStateOf(false) }
+            val shouldScroll = remember { mutableStateOf(false) }
 
-                    popUpTo(startDestinationRoute ?: "Home") {
-                        saveState = false
+            IconButton(
+                onClick = {
+                    shouldScroll.value = true
+                    triggerEffect.value = !triggerEffect.value
+                },
+                content = {
+                    LaunchedEffect(triggerEffect.value, shouldScroll.value) {
+                        if (shouldScroll.value) {
+                            pagerState.animateScrollToPage(targetPage)
+                        } else {
+                            shouldScroll.value = false
+                            triggerEffect.value = !triggerEffect.value
+                        }
                     }
 
-                    launchSingleTop = true
-                    restoreState = true
+                    Icon(
+                        imageVector = icon,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        contentDescription = description
+                    )
                 }
-            }
-        },
-        content = {
-            Icon(
-                icon,
-                description,
-                tint = selectedPrimary
             )
         }
-    )
+    }
 }
 
 @Composable
 fun NowPlayingExtension(
-    navController: NavController,
     barViewModel: AppBarViewModel
 ) {
     val playerViewModel = hiltViewModel<PlayerViewModel>(
         LocalActivity.current as ComponentActivity
     )
 
-    val currentMediaItem by playerViewModel.currentMediaItem.collectAsState()
-    val currentRoute = navController.currentDestination?.route
+    val mediaItemVisibility by barViewModel.mediaItemVisible.collectAsState()
 
     val currentSong = playerViewModel.currentMediaItem.collectAsState()
     val currentArtwork = currentSong.value?.mediaMetadata?.artworkUri
     val currentTitle = currentSong.value?.mediaMetadata?.title
     val currentArtist = currentSong.value?.mediaMetadata?.artist
 
-    val encodedUri = Uri.encode(currentSong.value?.localConfiguration?.uri.toString())
-    val encodedTitle = Uri.encode(currentSong.value?.mediaMetadata?.title.toString())
-    val encodedArtist = Uri.encode(currentSong.value?.mediaMetadata?.artist.toString())
-    val encodedArtwork = Uri.encode(currentSong.value?.mediaMetadata?.artworkUri.toString())
-
     AnimatedVisibility(
-        visible = currentMediaItem != null && currentRoute != "NowPlayingScreen/{songUri}/{songTitle}/{songArtist}/{albumArtwork}",
+        visible = mediaItemVisibility,
         modifier = Modifier
             .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
                 onClick = {
                     barViewModel.onHideBars()
-                    navController.navigate("NowPlayingScreen/$encodedUri/$encodedTitle/$encodedArtist/$encodedArtwork")
+                    barViewModel.onClickedNowPlaying()
                 }
             )
-            .heightIn(max = 70.dp),
-        enter = fadeIn(animationSpec = tween(durationMillis = 400)),
-        exit = fadeOut(animationSpec = tween(durationMillis = 400))
+            .heightIn(max = 76.dp),
+        enter = fadeIn(animationSpec = tween(durationMillis = 100)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 100))
     ) {
-
         val songPosition by playerViewModel.currentPosition.collectAsState()
         val songDuration by playerViewModel.fullDuration.collectAsState()
 
@@ -236,14 +254,22 @@ fun NowPlayingExtension(
             }
         }
 
-        Column {
+        Column(
+            modifier = Modifier
+                .background(
+                    color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                    shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                )
+                .padding(top = 4.dp)
+        ) {
             LinearProgressIndicator(
                 strokeCap = StrokeCap.Round,
                 progress = { currentProgress },
                 modifier = Modifier
-                    .heightIn(max = 7.dp)
-                    .align(Alignment.Start)
-                    .fillMaxSize(),
+                    .heightIn(max = 4.dp)
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
                 color = ProgressIndicatorDefaults.linearColor,
                 trackColor = ProgressIndicatorDefaults.linearTrackColor,
             )
@@ -258,14 +284,13 @@ fun NowPlayingExtension(
                     modifier = Modifier
                         .widthIn(max = 60.dp)
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface)
                 ) {
                     AsyncImage(
                         modifier = Modifier
                             .aspectRatio(1f)
                             .fillMaxSize()
                             .padding(start = 15.dp)
-                            .clip(RoundedCornerShape(10.dp)),
+                            .clip(RoundedCornerShape(25)),
                         contentDescription = "${currentTitle ?: "Unknown"}",
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(currentArtwork)
@@ -289,15 +314,11 @@ fun NowPlayingExtension(
                         val extendedText = remember(maxWidth) { mutableStateOf<Dp?>(null) }
 
                         LaunchedEffect(LocalConfiguration.current.orientation) {
-                            if (maxWidth >= 900.dp) {
-                                extendedText.value = 900.dp - 80.dp
-                            } else if (maxWidth >= 362.dp) {
-                                extendedText.value = 362.dp - 80.dp
-                            } else if (maxWidth >= 240.dp) {
-                                extendedText.value = 240.dp - 80.dp
-                            }
-                            else {
-                                extendedText.value = 120.dp
+                            when {
+                                maxWidth >= 900.dp -> extendedText.value = 900.dp - 80.dp
+                                maxWidth >= 362.dp -> extendedText.value = 362.dp - 80.dp
+                                maxWidth >= 240.dp -> extendedText.value = 240.dp - 80.dp
+                                else -> extendedText.value = 120.dp
                             }
                         }
 
@@ -312,10 +333,10 @@ fun NowPlayingExtension(
                             Text(
                                 text = currentTitle.toString(),
                                 maxLines = 1,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier
-                                    .basicMarquee(repeatDelayMillis = 200),
+                                    .basicMarquee(repeatDelayMillis = 0, iterations = Int.MAX_VALUE),
                                 style = MaterialTheme.typography.labelLarge,
                             )
 
@@ -326,7 +347,7 @@ fun NowPlayingExtension(
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier
                                     .padding(top = 2.dp)
-                                    .basicMarquee(repeatDelayMillis = 200),
+                                    .basicMarquee(repeatDelayMillis = 0, iterations = Int.MAX_VALUE),
                                 style = MaterialTheme.typography.labelLarge,
                             )
                         }
@@ -337,9 +358,11 @@ fun NowPlayingExtension(
                             .align(Alignment.CenterEnd)
                             .padding(end = 15.dp)
                     ) {
-                        AppConstants.StarButton(
+                        StarButton(
                             playerViewModel = playerViewModel,
-                            buttonSize = 50.dp
+                            buttonSize = 50.dp,
+                            buttonColor = MaterialTheme.colorScheme.secondaryContainer,
+                            iconColor = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -348,55 +371,50 @@ fun NowPlayingExtension(
     }
 }
 
+enum class Routes(
+    page: Int,
+    description: String,
+    icon: Icons
+) {
+}
+
 @Keep
 @Composable
-fun AstrudAppBar(navController: NavController, barViewModel: AppBarViewModel) {
-    Column {
-        NowPlayingExtension(navController, barViewModel)
+fun AstrudAppBar(
+    pagerState: PagerState,
+) {
+    NavigationBar() {
+    }
+}
 
-        BottomAppBar(
-            modifier = Modifier
-                .fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.surface,
-            actions = {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(55.dp)
-                        ) {
-                            BottomBarIconButton(
-                                navController,
-                                "Home",
-                                Icons.Filled.Home,
-                                "Home"
-                            )
-                            BottomBarIconButton(
-                                navController,
-                                "List",
-                                Icons.Filled.LibraryMusic,
-                                "Songs"
-                            )
-                            BottomBarIconButton(
-                                navController,
-                                icon = Icons.Filled.Album,
-                                description = "Albums"
-                            )
-                            BottomBarIconButton(
-                                navController,
-                                icon = Icons.Filled.Person,
-                                description = "Artists"
-                            )
-                        }
-                    }
-                }
-            }
-        )
+@Composable
+fun NowPlayingListener(
+    barViewModel: AppBarViewModel,
+    playerViewModel: PlayerViewModel,
+    navController: NavController
+) {
+    val nowPlayingClickState by barViewModel.nowPlayingClickState.collectAsState()
+    val currentSong = playerViewModel.currentMediaItem.collectAsState()
+    val encodedUri = Uri.encode(currentSong.value?.localConfiguration?.uri.toString())
+    val encodedTitle = Uri.encode(currentSong.value?.mediaMetadata?.title.toString())
+    val encodedArtist = Uri.encode(currentSong.value?.mediaMetadata?.artist.toString())
+    val encodedArtwork = Uri.encode(currentSong.value?.mediaMetadata?.artworkUri.toString())
+
+    LaunchedEffect(!barViewModel.barVisibility.collectAsState().value) {
+        if (navController.currentDestination?.route == "Pager") {
+            barViewModel.onShowBars()
+        }
+    }
+
+    LaunchedEffect(nowPlayingClickState) {
+        if (currentSong.value != null && nowPlayingClickState && navController.currentDestination?.route != "NowPlayingScreen/{songUri}/{songTitle}/{songArtist}/{albumArtwork}") {
+            barViewModel.onNavigateToNowPlaying(
+                navController,
+                encodedUri,
+                encodedTitle,
+                encodedArtist,
+                encodedArtwork
+            )
+        }
     }
 }

@@ -1,0 +1,52 @@
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:name="vector"
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="960"
+            android:viewportHeight="960">
+            <group
+                android:name="group"
+                android:pivotX="480"
+                android:pivotY="490">
+                <path
+                    android:name="path"
+                    android:pathData="M 160 760 L 160 400 Q 160 381 168.5 364 Q 177 347 192 336 L 432 156 Q 453 140 480 140 Q 507 140 528 156 L 768 336 Q 783 347 791.5 364 Q 800 381 800 400 L 800 760 Q 800 793 776.5 816.5 Q 753 840 720 840 L 600 840 Q 583 840 571.5 828.5 Q 560 817 560 800 L 560 600 Q 560 583 548.5 571.5 Q 537 560 520 560 L 440 560 Q 423 560 411.5 571.5 Q 400 583 400 600 L 400 800 Q 400 817 388.5 828.5 Q 377 840 360 840 L 240 840 Q 207 840 183.5 816.5 Q 160 793 160 760 Z"
+                    android:fillColor="#000"
+                    android:strokeWidth="1"/>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="group">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="rotation"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="10"
+                    android:valueType="floatType"
+                    android:interpolator="@android:anim/bounce_interpolator"/>
+                <objectAnimator
+                    android:propertyName="rotation"
+                    android:startOffset="100"
+                    android:duration="100"
+                    android:valueFrom="10"
+                    android:valueTo="-10"
+                    android:valueType="floatType"
+                    android:interpolator="@android:anim/bounce_interpolator"/>
+                <objectAnimator
+                    android:propertyName="rotation"
+                    android:startOffset="200"
+                    android:duration="100"
+                    android:valueFrom="-10"
+                    android:valueTo="0"
+                    android:valueType="floatType"
+                    android:interpolator="@android:anim/bounce_interpolator"/>
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>
