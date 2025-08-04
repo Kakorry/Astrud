@@ -27,8 +27,3 @@ object LayoutSongsListSerializer : Serializer<LayoutSongsList> {
         }
     }
 }
-
-val Context.layoutSongsDataStore: DataStore<LayoutSongsList> by dataStore(
-    fileName = "layout_songs.pb",
-    serializer = LayoutSongsListSerializer
-)

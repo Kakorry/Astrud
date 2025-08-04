@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.application") version "8.11.1"
+    id("com.android.application") version "8.12.0"
     id("org.jetbrains.kotlin.android") version "2.2.0"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
     kotlin("plugin.serialization") version "2.0.21"
@@ -41,6 +41,10 @@ android {
     buildFeatures {
         compose = true
     }
+
+    ksp {
+        arg("room.schemaLocation", "${layout.buildDirectory.asFile.get().absolutePath}/schemas")
+    }
 }
 
 dependencies {
@@ -50,10 +54,12 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.material3.window.size.class1)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compiler)
+    implementation(libs.androidx.animation.graphics.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -67,7 +73,6 @@ dependencies {
     implementation(libs.androidx.navigation.dynamic.features.fragment)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.navigation.compose.v290)
-    implementation(libs.androidx.material.icons.extended)
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     androidTestImplementation(libs.androidx.navigation.testing)
@@ -80,6 +85,7 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.graphics.shapes)
     implementation(libs.protobuf.kotlin) {
         exclude(group = "com.google.protobuf", module = "protobuf-java")
     }
@@ -89,6 +95,8 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.fragment)
     ksp(libs.androidx.hilt.compiler)
     implementation(libs.protobuf.javalite)
+    // Extras Libraries:
+    implementation(libs.wavy.slider)
 }
 
 protobuf {

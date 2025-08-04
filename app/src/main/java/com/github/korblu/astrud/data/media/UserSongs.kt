@@ -10,65 +10,81 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.github.korblu.astrud.data.room.Song
-import com.github.korblu.astrud.ui.viewmodels.SongViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
 
 // First code of bluu-chan guys, thank you AI for teaching
 // me how to use this API because otherwise...(gulp) 05/25/25
 
-class UserSongs(songViewModel: SongViewModel) {
-    suspend fun getAllMetadata(context : Context, path: String) : List<Song> = withContext(
-        Dispatchers.IO) {
-        val songs = mutableListOf<Song>()
-        val hasReadPermission = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+class UserSongs(val context: Context) {
+    /** IMPORTANT: DON'T FORGET TO CLOSE THE CURSOR WHEN ACTIVITY IS DESTROYED */
+    private var cursor : Cursor? = null
+    private var getNextSongPosition = -1
+
+    /**
+     * Sets the main cursor for the functions. Remember to close it on activity destruction to prevent
+     * memory leaks.
+     *
+     * @param projection Array<String> of metadata you want to use with the cursor
+     * @param mustHave Array<String> of "must have"s when showing the song. e.g., when you want the
+     * cursor only to select songs that have a defined album.
+     * All possible inputs: "ALBUM", "ARTIST", "YEAR"
+     *
+     * @param sort String of the sort order you want to use. Default is "ASC". Use "DSC" for
+     * descending and RANDOM for random order.
+     *
+     *
+     * @author bluu
+     * @see closeCursor */
+    suspend fun setCursor(
+        projection : Array<String>,
+        mustHave : Array<String>? = null,
+        sort : String = "ASC"
+    ) = withContext(Dispatchers.IO){
+        val readPermission = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 context,
-                android.Manifest.permission.READ_MEDIA_AUDIO
-            ) == PackageManager.PERMISSION_GRANTED
-        } else {
+                android.Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED
+        } else{
             ContextCompat.checkSelfPermission(
                 context,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
+                android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
 
-        if (!hasReadPermission) {
-            Log.d("UserSongs", "Permission to read audios not granted. Unable to retrieve songs")
-            return@withContext emptyList()
+        if(!readPermission) {
+            Log.e("Permission Error", "No permission for setCursor()")
+            return@withContext
         }
+
+        cursor?.close()
 
         val collection: Uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        val projection = arrayOf(
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.TITLE,
-            MediaStore.Audio.Media.ARTIST,
-            MediaStore.Audio.Media.COMPOSER,
-            MediaStore.Audio.Media.ALBUM,
-            MediaStore.Audio.Media.TRACK,
-            MediaStore.Audio.Media.DISC_NUMBER,
-            MediaStore.Audio.Media.GENRE,
-            MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.YEAR,
-            MediaStore.Audio.Media.ALBUM_ID,
-        )
 
-        val normalizedPath = File(path).canonicalPath.trimEnd('/') + File.separator
-        val selection = "${MediaStore.Audio.Media.DATA} LIKE ?"
-        val selectionArgs = arrayOf("$normalizedPath%")
-        val isMusicSelection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-        val notHiddenSelection = "${MediaStore.Audio.Media.IS_PENDING} = 0"
-        val hasArtistSelection = "${MediaStore.Audio.Media.TITLE} IS NOT NULL"
-        val hasAlbumArtSelection = "${MediaStore.Audio.Media.ALBUM_ID} IS NOT NULL"
+        val selectionConditions = mutableListOf<String>()
+        selectionConditions.add("${MediaStore.Audio.Media.IS_MUSIC} != 0")
+        selectionConditions.add("${MediaStore.Audio.Media.IS_PENDING} = 0")
 
-        val finalSelection = "$selection AND $isMusicSelection AND $notHiddenSelection AND $hasAlbumArtSelection AND $hasArtistSelection"
-        val finalSelectionArgs = selectionArgs
+        if(!mustHave.isNullOrEmpty()) {
+            if(mustHave.contains("ALBUM")) {
+                selectionConditions.add("${MediaStore.Audio.Media.ALBUM} IS NOT NULL")
+            }
+            if(mustHave.contains("ARTIST")) {
+                selectionConditions.add("${MediaStore.Audio.Media.ARTIST} IS NOT NULL")
+            }
+            if(mustHave.contains("YEAR")) {
+                selectionConditions.add("${MediaStore.Audio.Media.YEAR} IS NOT NULL")
+            }
+        }
 
-        val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
+        val finalSelection = selectionConditions.joinToString(" AND ")
+        val finalSelectionArgs : Array<String>? = null
 
-        var cursor: Cursor? = null
+        val sortOrder = if(sort == "RANDOM"){
+            "RANDOM()"
+        } else {
+            "${MediaStore.Audio.Media.TITLE} $sort"
+        }
+
         try {
             cursor = context.contentResolver.query(
                 collection,
@@ -77,73 +93,19 @@ class UserSongs(songViewModel: SongViewModel) {
                 finalSelectionArgs,
                 sortOrder
             )
-
-            cursor?.let {
-                val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-                val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-                val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
-                val composerColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.COMPOSER)
-                val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
-                val trackColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
-                val discColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DISC_NUMBER)
-                val genreColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE)
-                val durationColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-                val yearColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
-                val albumIdColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
-
-                while(it.moveToNext()) {
-                    val id = it.getLong(idColumn)
-                    val title = it.getString(titleColumn) ?: "Unknown Title"
-                    val artist = it.getString(artistColumn) ?: "Unknown Artist"
-                    val composer = it.getString(composerColumn) ?: "Unknown Composer"
-                    val album = it.getString(albumColumn) ?: "Unknown Album"
-                    val genre = it.getString(genreColumn) ?: "Unknown Genre"
-                    val duration = it.getLong(durationColumn)
-                    val albumId = it.getLong(albumIdColumn)
-                    val track = if(it.isNull(trackColumn)) {null} else {it.getInt(trackColumn)}
-                    val discNumber = if(it.isNull(discColumn)) {null} else {it.getInt(discColumn)}
-                    val year = if(it.isNull(yearColumn)) {null} else {it.getInt(yearColumn)}
-                    val songUri = ContentUris.withAppendedId(
-                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                        id
-                    )
-                    val albumUri = ContentUris.withAppendedId(
-                        "content://media/external/audio/albumart".toUri(),
-                        albumId
-                    )
-
-                    songs.add(
-                        Song(
-                            id = null,
-                            title = title,
-                            artist = artist,
-                            composer = composer,
-                            album = album,
-                            track = track,
-                            discNumber = discNumber,
-                            genre = genre,
-                            duration = duration.toInt(),
-                            year = year,
-                            uri = songUri.toString(),
-                            coverUri = albumUri.toString(),
-                        )
-                    )
-                }
-            }
         } catch(e: Exception) {
-            Log.e("UserSongs", "Error querying MediaStore: ${e.message}")
-        } finally {
-            cursor?.close()
+            Log.e("Error", "Failed to set up cursor query in setCursor(): $e")
+            cursor = null
         }
-        return@withContext songs
     }
 
-    suspend fun getCollectionSize(
-        context: Context,
-        album : Boolean?,
-        year : Boolean?,
-        artist : Boolean?
-    ) : Int? = withContext(Dispatchers.IO) {
+    fun closeCursor() {
+        cursor?.close()
+        cursor = null
+        Log.d("UserSongs", "Cursor closed.")
+    }
+
+    suspend fun getRandomSong(): Map<String?, String?>? = withContext(Dispatchers.IO) {
         val readPermission = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 context,
@@ -155,127 +117,29 @@ class UserSongs(songViewModel: SongViewModel) {
         }
 
         if (!readPermission) {
-            Log.d("UserSongs", "No permission for getRandomSong().")
+            Log.e("Permission Error", "No permission for getRandomSong().")
             return@withContext null
         }
 
-        val collection: Uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        val projection = arrayOf(
-            MediaStore.Audio.Media.ALBUM,
-            MediaStore.Audio.Media.ARTIST,
-            MediaStore.Audio.Media.YEAR
-        )
-
-        val isMusicSelection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-        val notHiddenSelection = "${MediaStore.Audio.Media.IS_PENDING} = 0"
-
-        var finalAlbumSelection = ""
-        var finalArtistSelection = ""
-        var finalYearSelection = ""
-
-        if(album == true) {
-            val hasAlbumSelection = "${MediaStore.Audio.Media.ALBUM} IS NOT NULL"
-            finalAlbumSelection = " AND $hasAlbumSelection"
-        }
-        if(artist == true) {
-            val hasArtistSelection = "${MediaStore.Audio.Media.ARTIST} IS NOT NULL"
-            finalArtistSelection = " AND $hasArtistSelection"
-        }
-        if(year == true) {
-            val hasYearSelection = "${MediaStore.Audio.Media.YEAR} IS NOT NULL"
-            finalYearSelection = " AND $hasYearSelection"
+        if(cursor == null) {
+            Log.w("UserSongs", "Cursor is null")
+            return@withContext null
         }
 
-
-        val finalSelection = "$isMusicSelection AND ${notHiddenSelection}${finalAlbumSelection}${finalArtistSelection}${finalYearSelection}"
-        val finalSelectionArgs : Array<String>? = null
-
-        val sortOrder = ""
-
-        var cursor : Cursor? = null
-        var counter = 0
-        try {
-            cursor = context.contentResolver.query(
-                collection,
-                projection,
-                finalSelection,
-                finalSelectionArgs,
-                sortOrder
-            )
+        try{
             cursor?.let {
-                while(it.moveToNext()) {
-                    counter++
-                }
-            }
-
-            return@withContext counter
-        } catch(e: Exception) {
-            Log.d("UserSongs", "Error in cursor query in getCollectionSize(): $e")
-        } finally {
-            cursor?.close()
-        }
-    }
-
-    suspend fun getRandomSong(context: Context, yearOnly: Boolean = false): Map<String?, String?>? = withContext(
-        Dispatchers.IO
-    ) {
-        val readPermission = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED
-        } else{
-            ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        }
-
-        if (!readPermission) {
-            Log.d("UserSongs", "No permission for getRandomSong().")
-            return@withContext null
-        }
-
-        val collection: Uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        val projection = arrayOf(
-            MediaStore.Audio.Media.TITLE,
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.ALBUM,
-            MediaStore.Audio.Media.ALBUM_ID
-        )
-
-        val isMusicSelection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-        val hasTitleSelection = "${MediaStore.Audio.Media.TITLE} IS NOT NULL"
-        val notHiddenSelection = "${MediaStore.Audio.Media.IS_PENDING} = 0"
-        val hasAlbumSelection = "${MediaStore.Audio.Media.ALBUM} IS NOT NULL"
-        val hasYearSelection = "${MediaStore.Audio.Media.YEAR} IS NOT NULL"
-
-        val finalSelection = if (yearOnly) {
-            "$isMusicSelection AND $notHiddenSelection AND $hasAlbumSelection AND $hasTitleSelection AND $hasYearSelection"
-        } else {
-            "$isMusicSelection AND $notHiddenSelection AND $hasTitleSelection AND $hasAlbumSelection"
-        }
-        val finalSelectionArgs : Array<String>? = null
-
-        var cursor : Cursor? = null
-        try {
-            cursor = context.contentResolver.query(
-                collection,
-                projection,
-                finalSelection,
-                finalSelectionArgs,
-                null
-            )
-
-            cursor.let {
-                if (it != null && it.count > 0) {
+                if (it.count > 0) {
                     val randomPosition = (0 until it.count).random()
                     it.moveToPosition(randomPosition)
 
                     val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
+                    val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                     val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
                     val albumIdColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
                     val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
 
                     val title : String? = it.getString(titleColumn)
+                    val artist: String? = it.getString(artistColumn)
                     val id : String = it.getString(idColumn)
                     val album : String = it.getString(albumColumn)
                     val albumId = it.getLong(albumIdColumn)
@@ -290,6 +154,7 @@ class UserSongs(songViewModel: SongViewModel) {
 
                     return@withContext mapOf(
                         "title" to title,
+                        "artist" to artist,
                         "uri" to songUri,
                         "album" to album,
                         "albumArtUri" to albumArtUri
@@ -297,18 +162,77 @@ class UserSongs(songViewModel: SongViewModel) {
                 }
             }
         } catch(e: Exception) {
-            Log.d("UserSongs", "Error in cursor query in getRandomSong(): $e")
-        } finally {
-            cursor?.close()
+            Log.e("Error", "Error in cursor query in getRandomSong(): $e")
         }
 
+        cursor?.moveToPosition(-1)
         return@withContext null
     }
 
-    class SongIterator(val context: Context) {
-        /** IMPORTANT: DON'T FORGET TO CLOSE THE CURSOR WHEN ACTIVITY IS DESTROYED */
-        var cursor : Cursor? = null
+    /**
+     * Get the next song from the current open [cursor] (or the first song if not called before)
+     * and returns a Map containing its title, album, artist, and year.
+     *
+     * @param check Tells if you want the function to check permission and cursor state on call.
+     * Default is true.
+     * @return Map<String, String?>?
+     * @see setCursor*/
+    suspend fun getNextSong(check: Boolean = true) : Map<String, String?>? = withContext(Dispatchers.IO){
+        if(check) {
+            val readPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.READ_MEDIA_AUDIO
+                ) == PackageManager.PERMISSION_GRANTED
+            } else {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED
+            }
 
+            if (!readPermission) {
+                Log.e("Permission Error", "No permission for getNextSong()")
+                return@withContext null
+            }
+
+            if (cursor == null) {
+                Log.w("UserSongs", "Cursor is null")
+                return@withContext null
+            }
+        }
+
+        cursor?.moveToPosition(getNextSongPosition)
+        try {
+            cursor?.let {
+                val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
+                val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
+                val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
+                val yearColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
+
+                if(it.moveToNext()) {
+                    getNextSongPosition++
+
+                    val title = it.getString(titleColumn) ?: "Unknown Title"
+                    val album = it.getString(albumColumn) ?: "Unknown Album"
+                    val artist = it.getString(artistColumn) ?: "Unknown Artist"
+                    val year = if(it.isNull(yearColumn)) {null} else {it.getInt(yearColumn)}
+
+                    return@withContext mapOf(
+                        "title" to title,
+                        "album" to album,
+                        "artist" to artist,
+                        "year" to year.toString()
+                    )
+                }
+            }
+        } catch(e: Exception) {
+            Log.d("Error", "Failure in getNextSong(): $e")
+        }
+        return@withContext null
+    }
+
+    suspend fun getCollectionSize() : Int? = withContext(Dispatchers.IO) {
         val readPermission = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 context,
@@ -319,103 +243,156 @@ class UserSongs(songViewModel: SongViewModel) {
                 android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
 
-        suspend fun setCursor(
-            album : Boolean?,
-            year : Boolean?,
-            artist : Boolean?
-        ) = withContext(Dispatchers.IO){
-
-            if(!readPermission) {
-                Log.d("SongIterator", "No permission for setCursor()")
-                return@withContext null
-            }
-
-            val collection: Uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-            val projection = arrayOf(
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.ALBUM,
-                MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.YEAR
-            )
-
-            val isMusicSelection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-            val notHiddenSelection = "${MediaStore.Audio.Media.IS_PENDING} = 0"
-
-            var finalAlbumSelection = ""
-            var finalArtistSelection = ""
-            var finalYearSelection = ""
-
-            if(album == true) {
-                val hasAlbumSelection = "${MediaStore.Audio.Media.ALBUM} IS NOT NULL"
-                finalAlbumSelection = " AND $hasAlbumSelection"
-            }
-            if(artist == true) {
-                val hasArtistSelection = "${MediaStore.Audio.Media.ARTIST} IS NOT NULL"
-                finalArtistSelection = " AND $hasArtistSelection"
-            }
-            if(year == true) {
-                val hasYearSelection = "${MediaStore.Audio.Media.YEAR} IS NOT NULL"
-                finalYearSelection = " AND $hasYearSelection"
-            }
-
-
-            val finalSelection = "$isMusicSelection AND $notHiddenSelection$finalAlbumSelection$finalArtistSelection$finalYearSelection"
-            val finalSelectionArgs : Array<String>? = null
-
-            val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
-
-            try {
-                cursor = context.contentResolver.query(
-                    collection,
-                    projection,
-                    finalSelection,
-                    finalSelectionArgs,
-                    sortOrder
-                )
-            } catch(e: Exception) {
-                Log.d("SongIterator", "Failed to set up cursor query in setCursor(): $e")
-            }
-        }
-
-        suspend fun getNextSong() : Map<String, String?>? = withContext(Dispatchers.IO){
-            if(!readPermission) {
-                Log.d("SongIterator", "No permission for getNextSong()")
-                return@withContext null
-            }
-
-            try {
-                cursor?.let {
-                    val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-                    val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
-                    val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
-                    val yearColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
-
-                    if(it.moveToNext()) {
-                        val title = it.getString(titleColumn) ?: "Unknown Title"
-                        val album = it.getString(albumColumn) ?: "Unknown Album"
-                        val artist = it.getString(artistColumn) ?: "Unknown Artist"
-                        val year = if(it.isNull(yearColumn)) {null} else {it.getInt(yearColumn)}
-
-                        return@withContext mapOf(
-                            "title" to title,
-                            "album" to album,
-                            "artist" to artist,
-                            "year" to year.toString()
-                        )
-                    }
-                }
-            } catch(e: Exception) {
-                Log.d("SongIterator", "Failure in getNextSong(): $e")
-            }
+        if (!readPermission) {
+            Log.e("Permission Error", "No permission for getRandomSong().")
             return@withContext null
         }
 
-        fun closeCursor() {
-            cursor?.close()
-            cursor = null
-            Log.d("SongIterator", "Cursor closed.")
+        if(cursor == null) {
+            Log.w("UserSongs", "Cursor is null")
+            return@withContext null
+        }
+
+        try {
+            return@withContext cursor?.count
+        } catch(e: Exception) {
+            Log.e("Error", "Error in cursor query in getCollectionSize(): $e")
+            return@withContext null
         }
     }
 
-    
+    suspend fun searchSong(input : String) : MutableList<Map<String, String?>?>? = withContext(
+        Dispatchers.IO){
+        val readPermission = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED
+        } else{
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (!readPermission) {
+            Log.e("Permission Error", "No permission for getRandomSong().")
+            return@withContext null
+        }
+
+        getNextSongPosition = -1
+
+        var iteratorNumber = 0
+
+        val inputFinal = input.lowercase().trim()
+        val length = inputFinal.length
+
+        val searchResult : MutableList<Map<String, String?>?> = mutableListOf()
+
+        while(iteratorNumber <= 10) {
+            iteratorNumber++
+
+            val songMap = getNextSong(false)
+            if(songMap != null && songMap["title"] != null){
+                val songLetters = songMap["title"]?.slice(0..length)
+                ?.lowercase()
+                ?.trim()
+
+                if(inputFinal == songLetters) {
+                    searchResult.add(songMap)
+                }
+            }
+        }
+
+        return@withContext searchResult
+    }
+
+    /** Lists all of the uniques "characteristics". e.g., list all the unique albums.
+     *
+     * DISCLAIMER: It creates its own local cursor, so no need to set one beforehand.
+     *
+     * @param toList String of what you want to list. The possibilities are:
+     *
+     * "ALBUM" "ARTIST"
+     *
+     * @return List<String> of all the uniques [toList]
+     * */
+    suspend fun listAllDesired(toList: String) : List<String>? = withContext(Dispatchers.IO) {
+        val readPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.READ_MEDIA_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (!readPermission) {
+            Log.e("Permission Error", "No permission for listAllDesired()")
+            return@withContext null
+        }
+
+        var localCursor: Cursor? = null
+        val desiredList : MutableList<String> = mutableListOf()
+
+        try {
+            val toListFinal = when (toList) {
+                "ALBUM" -> {
+                    MediaStore.Audio.Media.ALBUM
+                }
+
+                "ARTIST" -> {
+                    MediaStore.Audio.Media.ARTIST
+                }
+
+                else -> {
+                    Log.w("UserSongs", "Parameter 'toList' is not valid.")
+                    return@withContext null
+                }
+            }
+
+
+            val collection: Uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+
+            val projection = arrayOf(
+                MediaStore.Audio.Media.ALBUM
+            )
+
+            val selectionConditions = mutableListOf<String>()
+            selectionConditions.add("${MediaStore.Audio.Media.IS_MUSIC} != 0")
+            selectionConditions.add("${MediaStore.Audio.Media.IS_PENDING} = 0")
+            selectionConditions.add("$toListFinal IS NOT NULL")
+
+            val finalSelection = selectionConditions.joinToString(" AND ")
+            val sortOrder = "$toListFinal ASC"
+
+            localCursor = context.contentResolver.query(
+                collection,
+                projection,
+                finalSelection,
+                null,
+                "$sortOrder) GROUP BY $toListFinal"
+            )
+
+            localCursor?.let {
+                val desiredColumnIndex = it.getColumnIndex(toListFinal)
+                if (desiredColumnIndex == -1) {
+                    Log.e("UserSongs", "MediaStore.Audio.Media.ALBUM column not found.")
+                    return@withContext emptyList()
+                }
+                while(it.moveToNext()) {
+                    val desiredName = it.getString(desiredColumnIndex)
+                    if(!desiredName.isNullOrBlank()) {
+                        desiredList.add(desiredName)
+                    }
+                }
+            }
+        } catch(e: Exception) {
+            Log.d("Error", "Error in UserSongs.listAllDesired(): $e")
+        } finally {
+            localCursor?.close()
+        }
+        return@withContext null
+    }
 }

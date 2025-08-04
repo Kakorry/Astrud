@@ -1,15 +1,20 @@
 package com.github.korblu.astrud.ui.viewmodels
 
+import android.content.Context
+import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.korblu.astrud.data.datastore.LayoutSong
-import com.github.korblu.astrud.data.datastore.LayoutSongs
 import com.github.korblu.astrud.data.datastore.UserPreferences
+import com.github.korblu.astrud.data.media.UserSongs
 import com.github.korblu.astrud.data.repos.LayoutSongsRepo
-import com.github.korblu.astrud.data.repos.SongsRepo
+import com.github.korblu.astrud.data.repos.RoomRecentsRepo
 import com.github.korblu.astrud.data.repos.UserPreferencesRepo
-import com.github.korblu.astrud.data.room.RoomSong
+import com.github.korblu.astrud.data.room.entity.RoomRecents
+import com.github.korblu.astrud.data.room.pojo.LastPlayedAlbumsInfo
+import com.github.korblu.astrud.data.room.pojo.LastPlayedArtistsInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,16 +25,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SongViewModel @Inject constructor(
-    private val songsRepo: SongsRepo,
-    private val userPrefRepo: UserPreferencesRepo,
-    private val layoutSongsRepo: LayoutSongsRepo
+    @ApplicationContext private val context: Context,
+    userPrefRepo: UserPreferencesRepo,
+    private val layoutSongsRepo: LayoutSongsRepo,
+    private val recentsRepo: RoomRecentsRepo
 ) : ViewModel() {
-
-    private val _randomRoomSong = MutableStateFlow<RoomSong?>(null)
-    val randomRoomSong = _randomRoomSong.asStateFlow()
-
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
+
+    private val _librarySize = MutableStateFlow<Int?>(null)
+    val librarySize = _librarySize.asStateFlow()
 
     private val _wasPermissionGiven = MutableStateFlow<Boolean?>(null)
     val wasPermissionGiven = _wasPermissionGiven.asStateFlow()
@@ -37,21 +42,22 @@ class SongViewModel @Inject constructor(
     private val _layoutSongObjectList = MutableStateFlow<List<LayoutSong>>(listOf())
     val layoutSongObjectList = _layoutSongObjectList.asStateFlow()
 
-    fun onUpdateRoomSong(roomSong: RoomSong) {
-        viewModelScope.launch {
-            songsRepo.updateSong(roomSong)
-        }
-    }
+    private val _recentSongsFlow = MutableStateFlow<List<RoomRecents>>(listOf())
+    val recentSongsFlow = _recentSongsFlow.asStateFlow()
 
-    fun onDeleteRoomSong(roomSong: RoomSong) {
-        viewModelScope.launch {
-            songsRepo.deleteSong(roomSong)
-        }
-    }
+    private val _recentAlbumsFlow = MutableStateFlow<List<LastPlayedAlbumsInfo>>(listOf())
+    val recentAlbumsFlow = _recentAlbumsFlow.asStateFlow()
 
-    fun onGetRoomSongById(id: Long) {
+    private val _recentArtistsFlow = MutableStateFlow<List<LastPlayedArtistsInfo>>(listOf())
+    val recentArtistsFlow = _recentArtistsFlow.asStateFlow()
+
+    init {
         viewModelScope.launch {
-            songsRepo.getSongById(id)
+            _recentSongsFlow.value = recentsRepo.getMostRecents(30)
+
+            _recentAlbumsFlow.value = recentsRepo.getLastPlayedAlbums(30)
+
+            _recentArtistsFlow.value = recentsRepo.getLastPlayedArtists(30)
         }
     }
 
@@ -86,4 +92,27 @@ class SongViewModel @Inject constructor(
             layoutSongsRepo.clearSongs()
         }
     }
+
+    fun onGetLibrarySize() {
+        viewModelScope.launch {
+            val userSongs = UserSongs(context)
+            userSongs.setCursor(
+                projection = arrayOf(
+                    MediaStore.Audio.Media.TITLE
+                ),
+                sort = "ASC"
+            )
+            val currentLibrarySize = userSongs.getCollectionSize()
+            _librarySize.value = currentLibrarySize
+            userSongs.closeCursor()
+        }
+    }
+
+    fun onInsertRecents(song: RoomRecents) {
+        viewModelScope.launch {
+            recentsRepo.insertOrUpdate(song)
+        }
+    }
+
+
 }
