@@ -35,7 +35,7 @@ class MediaService: MediaSessionService() {
             AppConstants.MEDIA_NOTIFICATION_ID,
             AppConstants.MEDIA_NOTIFICATION_CHANNEL_ID
         )
-            .setSmallIconResourceId(R.drawable.astrud_icon)
+            .setSmallIconResourceId(R.drawable.ic_astrud)
             .setMediaDescriptionAdapter(object : PlayerNotificationManager.MediaDescriptionAdapter {
             override fun getCurrentContentTitle(player: Player): CharSequence {
                 val mediaItem = player.currentMediaItem
