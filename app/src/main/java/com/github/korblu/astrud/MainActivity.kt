@@ -1,74 +1,54 @@
 package com.github.korblu.astrud
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.Keep
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.EaseOutExpo
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Album
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.github.korblu.astrud.data.media.AudioPermissionHelper
 import com.github.korblu.astrud.ui.pages.AstrudHome
 import com.github.korblu.astrud.ui.pages.AstrudSongList
+import com.github.korblu.astrud.ui.pages.NowPlaying
+import com.github.korblu.astrud.ui.pages.components.AstrudHeader
+import com.github.korblu.astrud.ui.pages.components.AstrudNavigationBar
 import com.github.korblu.astrud.ui.theme.AstrudTheme
 import com.github.korblu.astrud.ui.viewmodels.AppBarViewModel
+import com.github.korblu.astrud.ui.viewmodels.PlayerViewModel
 import com.github.korblu.astrud.ui.viewmodels.SongViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import android.provider.Settings as AppSettings
@@ -81,15 +61,23 @@ class MainActivity : ComponentActivity() {
     ) { isGranted : Boolean ->
         audioPermissionHelper.handleResult(isGranted)
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge(navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT))
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        window.isNavigationBarContrastEnforced = false
+
         setContent {
             val songViewModel = hiltViewModel<SongViewModel>()
-            val barViewModel= hiltViewModel<AppBarViewModel>()
+            val barViewModel= hiltViewModel<AppBarViewModel>(
+                LocalActivity.current as ComponentActivity
+            )
+            val playerViewModel = hiltViewModel<PlayerViewModel>(
+                LocalActivity.current as ComponentActivity
+            )
 
             val navController = rememberNavController()
-            val isLoading by songViewModel.isLoading.collectAsState()
             val isAudioPermissionGiven by songViewModel.wasPermissionGiven.collectAsState()
 
             audioPermissionHelper = AudioPermissionHelper(
@@ -128,7 +116,7 @@ class MainActivity : ComponentActivity() {
             audioPermissionHelper.checkAndRequest()
 
             if (isAudioPermissionGiven == true) {
-                 AstrudApp(songViewModel, barViewModel, navController)
+                 AstrudApp(songViewModel, barViewModel, playerViewModel, navController)
             }
         }
     }
@@ -136,280 +124,174 @@ class MainActivity : ComponentActivity() {
 
 // Unrelated, but did you know Astrud sang Girl from Ipanema?
 // You should listen to it. -K 05/25/2025
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable // Added Pair to return two values
-fun AstrudHeader(navController: NavHostController, scrollBehavior: TopAppBarScrollBehavior, songViewModel: AppBarViewModel) {
-    CenterAlignedTopAppBar(
-        scrollBehavior = scrollBehavior,
-        title = {
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.Start
-            ) {
-                IconButton(
-                    onClick = {},
-                    modifier = Modifier
-                        .padding(start = 5.dp)
-                        .size(25.dp)
-                        .align(Alignment.CenterVertically)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = "Settings",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Row(
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.Top,
-                    modifier = Modifier.padding(start = 5.dp)
-                ) {
-                    Text(
-                        text = "As",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = "trud",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                IconButton(
-                    onClick = {},
-                    modifier = Modifier
-                        .padding(top = 2.dp, end = 5.dp)
-                        .size(25.dp)
-                        .align(Alignment.CenterVertically)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            scrolledContainerColor = MaterialTheme.colorScheme.inverseOnSurface,
-            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface,
-            actionIconContentColor = MaterialTheme.colorScheme.onSurface
-        ),
-    ) }
-
-@Composable
-fun BottomBarIconButton(
-    navController: NavController,
-    targetRoute: String = "I'm gonna crash your ass!!",
-    icon: ImageVector = Icons.Filled.Home,
-    description: String = "Funny Little Place"
-) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    val selectedPrimary = if (currentRoute == targetRoute) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-
-    IconButton(
-        onClick = {
-            if (currentRoute != targetRoute && currentRoute != "Welcome") {
-                navController.navigate(targetRoute) {
-                    val startDestinationRoute = navController.graph.findStartDestination().route
-
-                    popUpTo(startDestinationRoute ?: "Home") {
-                        saveState = false
-                    }
-
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            }
-        },
-        content = {
-            Icon(
-                icon,
-                description,
-                tint = selectedPrimary
-            )
-        }
-    )
-}
-
-// I can't believe I had to make a separate function for this. -K 07/12/2025
-fun getCorrectTransition(currentRoute: String?, previousRoute: String?): EnterTransition? {
-    return if (currentRoute == "Home" && previousRoute == "Welcome" || previousRoute == null) {
-        fadeIn(animationSpec = tween(600))
-    } else {
-        fadeIn(animationSpec = tween(300)) + slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(300))
-    }
-}
-
-@Keep
-@Composable
-fun AstrudAppBar(navController: NavController) {
-    BottomAppBar(
-            modifier = Modifier
-                .fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.surface,
-            actions = {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(55.dp)
-                    ) {
-                        BottomBarIconButton(navController, "Home", Icons.Filled.Home, "Home")
-                        BottomBarIconButton(
-                            navController,
-                            "List",
-                            Icons.Filled.LibraryMusic,
-                            "Songs"
-                        )
-                        BottomBarIconButton(
-                            navController,
-                            icon = Icons.Filled.Album,
-                            description = "Albums"
-                        )
-                        BottomBarIconButton(
-                            navController,
-                            icon = Icons.Filled.Person,
-                            description = "Artists"
-                        )
-                    }
-                }
-            }
-        )
-}
-
+// TODO: It is probably a good idea to use a BottomSheetScaffold to make the NowPlayingExtension draggable
+//  but I will keep it like this for now. Not like it's essential or anything.
+// Another TODO: Fix the damn varied sized layouts and stop being lazy. -K 08/03/2025
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AstrudApp(
     songViewModel: SongViewModel = hiltViewModel<SongViewModel>(),
     barViewModel: AppBarViewModel = hiltViewModel<AppBarViewModel>(),
+    playerViewModel: PlayerViewModel = hiltViewModel<PlayerViewModel>(),
     navController: NavHostController
 ) {
     AstrudTheme {
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
+        val pagerState = rememberPagerState(initialPage = 0, pageCount = { 4 })
 
-        val homeAppBarState = rememberTopAppBarState()
-        val listAppBarState = rememberTopAppBarState()
-
-        val astrudHeaderState = when (currentRoute) {
-            "Home" -> TopAppBarDefaults.pinnedScrollBehavior(homeAppBarState)
-            "List" -> TopAppBarDefaults.pinnedScrollBehavior(listAppBarState)
-            else -> TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-        }
-        val previousRoute = navController.previousBackStackEntry?.destination?.route
+        val barVisibility by barViewModel.barVisibility.collectAsState()
         val playedAnimationStatus by barViewModel.playedBarAnimation.collectAsState()
 
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
         Scaffold(
-            bottomBar = {
+           bottomBar = {
                 AnimatedVisibility(
-                    visible = true,
+                    visible = barVisibility,
                     enter = if (!playedAnimationStatus) {
                         slideInVertically(
                             initialOffsetY = { it },
                             animationSpec = tween(
-                                durationMillis = 600,
-                                easing = LinearOutSlowInEasing
+                                durationMillis = 500,
+                                easing = EaseOutExpo
                             )
                         )
+
                     } else {
                         EnterTransition.None
                     },
-                    exit = if (!playedAnimationStatus) {
-                        slideOutVertically(
-                            targetOffsetY = { -it },
+                    exit = slideOutVertically(
+                            targetOffsetY = { it },
                             animationSpec = tween(
-                                durationMillis = 600,
-                                easing = LinearOutSlowInEasing
+                                durationMillis = 500,
+                                easing = EaseOutExpo
                             )
-                        )
-                    } else {
-                        ExitTransition.None
-                    },
+                        ),
                 ) {
-                    AstrudAppBar(navController)
+                    Column {
+                        AstrudNavigationBar(barViewModel, pagerState)
+                    }
                 }
             },
             topBar = {
                 AnimatedVisibility(
-                    visible = true,
-                    enter = if (!playedAnimationStatus) {
-                        slideInVertically(
+                    visible = barVisibility,
+                    enter = slideInVertically(
                             initialOffsetY = { -it },
                             animationSpec = tween(
-                                durationMillis = 600,
-                                easing = LinearOutSlowInEasing
+                                durationMillis = 500,
+                                easing = EaseOutExpo
                             )
+                        ) + fadeIn(animationSpec = tween(durationMillis = 500, easing = EaseOutExpo)),
+                    exit = slideOutVertically(
+                        targetOffsetY = { -it },
+                        animationSpec = tween(
+                            durationMillis = 500,
+                            easing = EaseOutExpo
                         )
-                    } else {
-                        EnterTransition.None
-                    },
-                    exit = if (!playedAnimationStatus) {
-                        slideOutVertically(
-                            targetOffsetY = { it },
-                            animationSpec = tween(
-                                durationMillis = 600,
-                                easing = LinearOutSlowInEasing
-                            )
-                        )
-                    } else {
-                        ExitTransition.None
-                    },
+                    ) + fadeOut(animationSpec = tween(durationMillis = 500, easing = EaseOutExpo))
                 ) {
-                    AstrudHeader(navController = navController, scrollBehavior = astrudHeaderState, barViewModel)
+                    AstrudHeader(
+                        navController = navController,
+                        scrollBehavior = scrollBehavior
+                    )
                 }
             }
         ) { innerPadding ->
+            val context = LocalContext.current
+
             NavHost(
                 navController = navController,
-                startDestination = "Home",
+                startDestination = "Pager",
             ) {
                 composable(
-                    "Home",
-                    enterTransition = {
-                        getCorrectTransition(currentRoute, previousRoute)
-                    },
-                    exitTransition = { fadeOut(animationSpec = tween(300)) + slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(300)) },
-                    popEnterTransition = { fadeIn(animationSpec = tween(300)) + slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(300)) },
-                    popExitTransition = { fadeOut(animationSpec = tween(300)) + slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(300)) }
+                    route = "Pager",
+                    enterTransition = { fadeIn(animationSpec = tween(durationMillis = 500)) },
+                    exitTransition = { fadeOut(animationSpec = tween(durationMillis = 500)) },
+                    popEnterTransition = { fadeIn(animationSpec = tween(durationMillis = 500)) },
+                    popExitTransition = { fadeOut(animationSpec = tween(durationMillis = 500)) }
                 ) {
-                    AstrudHome(
-                        navController,
-                        innerPadding,
-                        scrollBehavior = astrudHeaderState,
-                        songViewModel = songViewModel,
-                        barViewModel = barViewModel
-                    )
+                    HorizontalPager(pagerState) { page ->
+                        when (page) {
+                            0 -> AstrudHome(
+                                navController,
+                                innerPadding,
+                                barViewModel,
+                                songViewModel,
+                                playerViewModel
+                            )
+                            1 -> AstrudSongList(
+                                innerPadding,
+                                navController,
+                                barViewModel,
+                                playerViewModel
+                            )
+                        }
+                    }
 
-                    LaunchedEffect(true) {
-                        barViewModel.onSetPlayedStatus()
+                    val nowPlayingClickState by barViewModel.nowPlayingClickState.collectAsState()
+
+                    val currentSong = playerViewModel.currentMediaItem.collectAsState()
+                    val encodedUri = Uri.encode(currentSong.value?.localConfiguration?.uri.toString())
+                    val encodedTitle = Uri.encode(currentSong.value?.mediaMetadata?.title.toString())
+                    val encodedArtist = Uri.encode(currentSong.value?.mediaMetadata?.artist.toString())
+                    val encodedArtwork = Uri.encode(currentSong.value?.mediaMetadata?.artworkUri.toString())
+
+                    if (currentSong.value != null) {
+                        barViewModel.onSetMediaItemVisibility()
+                    }
+
+                    LaunchedEffect(nowPlayingClickState) {
+                        if (currentSong.value != null && navController.currentDestination?.route != "NowPlayingScreen/{songUri}/{songTitle}/{songArtist}/{albumArtwork}" && nowPlayingClickState) {
+                            barViewModel.onNavigateToNowPlaying(
+                                navController,
+                                encodedUri,
+                                encodedTitle,
+                                encodedArtist,
+                                encodedArtwork
+                            )
+                        }
                     }
                 }
+
                 composable(
-                    "List",
-                    enterTransition = { fadeIn(animationSpec = tween(300)) + slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) },
-                    exitTransition = { fadeOut(animationSpec = tween(300)) + slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) },
-                    popEnterTransition = { fadeIn(animationSpec = tween(300)) + slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) },
-                    popExitTransition = { fadeOut(animationSpec = tween(300)) + slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) }
-                ) { AstrudSongList(innerPadding, astrudHeaderState, barViewModel) }
+                    "NowPlayingScreen/{songUri}/{songTitle}/{songArtist}/{albumArtwork}",
+                    listOf(
+                        navArgument("songUri") { type = NavType.StringType },
+                        navArgument("songTitle") { type = NavType.StringType },
+                        navArgument("songArtist") { type = NavType.StringType },
+                        navArgument("albumArtwork") {
+                            type = NavType.StringType
+                            nullable = true
+                        }
+                    ),
+                    enterTransition = { slideInVertically(initialOffsetY = { it }, animationSpec = tween(500)) + fadeIn(animationSpec = tween(600)) },
+                    exitTransition = { slideOutVertically(targetOffsetY = { it }, animationSpec = tween(800)) + fadeOut(animationSpec = tween(600)) },
+                    popEnterTransition = { slideInVertically(initialOffsetY = { it }, animationSpec = tween(500)) + fadeIn(animationSpec = tween(600)) },
+                    popExitTransition = { slideOutVertically(targetOffsetY = { it }, animationSpec = tween(800)) + fadeOut(animationSpec = tween(600)) },
+                ) { backStackEntry ->
+                    val navBackStackEntry = backStackEntry
+                    val backStackState = navBackStackEntry.lifecycle.currentStateFlow.collectAsState()
+
+                    LaunchedEffect(backStackState.value.name) {
+                        if (backStackState.value == Lifecycle.State.CREATED) {
+                            barViewModel.onShowBars()
+                        }
+                    }
+
+                    val songUri = Uri.decode((backStackEntry.arguments?.getString("songUri"))).toUri()
+                    val songArtist = Uri.decode((backStackEntry.arguments?.getString("songArtist")))
+                    val songTitle = Uri.decode(backStackEntry.arguments?.getString("songTitle"))
+                    val albumArtwork = Uri.decode(backStackEntry.arguments?.getString("albumArtwork")).toUri()
+
+                    NowPlaying(
+                        navController,
+                        context,
+                        songTitle,
+                        songArtist,
+                        songUri,
+                        albumArtwork
+                    )
+                }
             }
         }
     }
