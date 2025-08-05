@@ -11,8 +11,8 @@ import com.github.korblu.astrud.data.repos.LayoutSongsRepo
 import com.github.korblu.astrud.data.repos.RoomRecentsRepo
 import com.github.korblu.astrud.data.repos.UserPreferencesRepo
 import com.github.korblu.astrud.data.room.entity.RoomRecents
-import com.github.korblu.astrud.data.room.pojo.LastPlayedAlbumsInfo
-import com.github.korblu.astrud.data.room.pojo.LastPlayedArtistsInfo
+import com.github.korblu.astrud.data.room.room_models.LastPlayedAlbumsInfo
+import com.github.korblu.astrud.data.room.room_models.LastPlayedArtistsInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
