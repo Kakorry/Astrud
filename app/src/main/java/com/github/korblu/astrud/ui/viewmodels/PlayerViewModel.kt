@@ -190,6 +190,7 @@ class PlayerViewModel @Inject constructor(
         mediaUri: Uri,
         title: String,
         artist: String,
+        album: String?,
         artwork: Uri?,
         mediaId: String = mediaUri.toString()
     ) {
@@ -205,6 +206,7 @@ class PlayerViewModel @Inject constructor(
                 MediaMetadata.Builder()
                     .setTitle(title)
                     .setArtist(artist)
+                    .setAlbumTitle(album)
                     .setArtworkUri(artwork)
                     .build()
             )
