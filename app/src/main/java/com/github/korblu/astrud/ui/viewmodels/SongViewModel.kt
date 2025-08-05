@@ -111,8 +111,17 @@ class SongViewModel @Inject constructor(
     fun onInsertRecents(song: RoomRecents) {
         viewModelScope.launch {
             recentsRepo.insertOrUpdate(song)
+            onUpdateRecents()
         }
     }
 
+    fun onUpdateRecents() {
+        viewModelScope.launch {
+            _recentSongsFlow.value = recentsRepo.getMostRecents(30)
 
+            _recentAlbumsFlow.value = recentsRepo.getLastPlayedAlbums(30)
+
+            _recentArtistsFlow.value = recentsRepo.getLastPlayedArtists(30)
+        }
+    }
 }
