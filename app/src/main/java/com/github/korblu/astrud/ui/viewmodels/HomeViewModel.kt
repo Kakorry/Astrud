@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.korblu.astrud.AppConstants
 import com.github.korblu.astrud.data.datastore.LayoutSong
 import com.github.korblu.astrud.data.media.UserSongs
+import com.github.korblu.astrud.data.media.media_models.SongMetadataModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,10 +29,10 @@ class HomeViewModel @Inject constructor(
         _homeListState.value = lazyState
     }
 
-    private val _suggestionList = MutableStateFlow<List<Map<String?, String?>?>>(List(10) { mapOf(null to null) })
+    private val _suggestionList = MutableStateFlow<List<SongMetadataModel?>?>(List(10) { null })
     val suggestionList = _suggestionList.asStateFlow()
 
-    private val _dialList = MutableStateFlow<List<Map<String?, String?>?>>(List(9) { mapOf(null to null) })
+    private val _dialList = MutableStateFlow<List<SongMetadataModel?>?>(List(9) { null })
     val dialList = _dialList.asStateFlow()
 
 
@@ -39,6 +40,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             userSongs.setCursor(
                 AppConstants.BASE_PROJECTION,
+                null,
                 arrayOf("YEAR"),
                 "RANDOM"
             )
@@ -51,6 +53,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             userSongs.setCursor(
                 AppConstants.BASE_PROJECTION,
+                null,
                 arrayOf("YEAR"),
                 "RANDOM"
             )

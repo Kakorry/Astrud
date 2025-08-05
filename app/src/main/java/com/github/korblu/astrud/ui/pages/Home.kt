@@ -1,13 +1,13 @@
 package com.github.korblu.astrud.ui.pages
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -59,16 +60,19 @@ import coil3.transition.CrossfadeTransition
 import com.github.korblu.astrud.ui.pages.components.NowPlayingListener
 import com.github.korblu.astrud.R
 import com.github.korblu.astrud.data.media.UserSongs
+import com.github.korblu.astrud.data.room.entity.RoomRecents
 import com.github.korblu.astrud.ui.theme.AstrudTheme
 import com.github.korblu.astrud.ui.viewmodels.AppBarViewModel
 import com.github.korblu.astrud.ui.viewmodels.HomeViewModel
 import com.github.korblu.astrud.ui.viewmodels.PlayerViewModel
 import com.github.korblu.astrud.ui.viewmodels.SongViewModel
+import kotlinx.coroutines.launch
 
 data class SongMetadata(
     val uri: Uri?,
     val title: String?,
     val artist: String?,
+    val album: String?,
     val albumArtUri: Uri?
 ) 
 
@@ -78,6 +82,9 @@ fun SongArtwork(
     navController: NavController,
     scale: ContentScale = ContentScale.Crop,
     songMetadata: SongMetadata,
+    songViewModel: SongViewModel = hiltViewModel<SongViewModel>(
+        LocalActivity.current as ComponentActivity
+    ),
     playerViewModel: PlayerViewModel = hiltViewModel<PlayerViewModel>(),
     rounding: Dp = 12.dp,
     maxTitleHeight: Dp = 30.dp
@@ -93,8 +100,27 @@ fun SongArtwork(
                             songMetadata.uri,
                             songMetadata.title ?: "Unknown",
                             songMetadata.artist ?: "Unknown",
+                            songMetadata.album ?: "Unknown",
                             songMetadata.albumArtUri
                         )
+
+                        val currentMediaItem = playerViewModel.currentMediaItem.value
+                        val songId = currentMediaItem?.mediaId
+
+                        songViewModel.onInsertRecents(
+                            RoomRecents(
+                                songId ?: "LOST",
+                                System.currentTimeMillis(),
+                                currentMediaItem?.mediaMetadata?.albumTitle.toString(),
+                                currentMediaItem?.mediaMetadata?.artist.toString()
+                            )
+                        )
+
+                        songViewModel.viewModelScope.launch {
+                            songViewModel.onUpdateRecents()
+                        }
+
+                        Log.d("HomeDebug", "${songViewModel.recentSongsFlow.value}")
 
                         val encodedUri = Uri.encode(songMetadata.uri.toString())
                         val encodedTitle = Uri.encode(songMetadata.title)
@@ -163,7 +189,12 @@ fun AstrudDial(
     val homeViewModel = hiltViewModel<HomeViewModel>(
         LocalActivity.current as ComponentActivity
     )
+    val songViewModel = hiltViewModel<SongViewModel>(
+        LocalActivity.current as ComponentActivity
+    )
+
     val songAttributes by homeViewModel.dialList.collectAsState()
+    val recentSongs by songViewModel.recentSongsFlow.collectAsState()
 
     Box(
         modifier = Modifier
@@ -184,10 +215,11 @@ fun AstrudDial(
                 userScrollEnabled = false
             ) {
                 items(9) { index ->
-                    val songAlbumUri = songAttributes[index]?.get("albumArtUri")
-                    val songTitle = songAttributes[index]?.get("title")
-                    val songUri = songAttributes[index]?.get("uri")
-                    val songArtist = songAttributes[index]?.get("artist")
+                    val songAlbumUri = songAttributes?.get(index)?.albumArtUri
+                    val songTitle = songAttributes?.get(index)?.title
+                    val songAlbumTitle = songAttributes?.get(index)?.album
+                    val songUri = songAttributes?.get(index)?.uri
+                    val songArtist = songAttributes?.get(index)?.artist
 
                     SongArtwork(
                         modifier = Modifier
@@ -202,6 +234,7 @@ fun AstrudDial(
                             songUri?.toUri(),
                             songTitle,
                             songArtist,
+                            songAlbumTitle,
                             songAlbumUri?.toUri()
                         ),
                         navController = navController,
@@ -243,10 +276,11 @@ fun SongSuggestions(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(10) { song ->
-            val songAlbumUri = songAttributes[song]?.get("albumArtUri")
-            val songTitle = songAttributes[song]?.get("title")
-            val songUri = songAttributes[song]?.get("uri")
-            val songArtist = songAttributes[song]?.get("artist")
+            val songAlbumUri = songAttributes?.get(song)?.albumArtUri
+            val songTitle = songAttributes?.get(song)?.title
+            val songAlbumTitle = songAttributes?.get(song)?.album
+            val songUri = songAttributes?.get(song)?.uri
+            val songArtist = songAttributes?.get(song)?.artist
 
             Box(
                 modifier = Modifier
@@ -268,6 +302,7 @@ fun SongSuggestions(
                         songUri?.toUri(),
                         songTitle,
                         songArtist,
+                        songAlbumTitle,
                         songAlbumUri?.toUri()
                     ),
                     navController = navController,
