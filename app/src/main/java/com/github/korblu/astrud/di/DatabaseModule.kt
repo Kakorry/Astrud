@@ -9,6 +9,8 @@ import androidx.room.Room
 import com.github.korblu.astrud.data.datastore.LayoutSongsList
 import com.github.korblu.astrud.data.datastore.LayoutSongsListSerializer
 import com.github.korblu.astrud.data.room.AppDatabase
+import com.github.korblu.astrud.data.room.MIGRATION_1_2
+import com.github.korblu.astrud.data.room.MIGRATION_2_3
 import com.github.korblu.astrud.data.room.dao.RoomRecentsDao
 import dagger.Module
 import dagger.Provides
@@ -30,7 +32,10 @@ object DatabaseModule {
             appContext,
             AppDatabase::class.java,
             "astrud_app_db"
-        ).build()
+        ).addMigrations(
+            MIGRATION_1_2,
+            MIGRATION_2_3)
+            .build()
     }
 
     @Singleton
