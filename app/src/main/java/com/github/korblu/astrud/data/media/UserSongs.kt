@@ -10,6 +10,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import com.github.korblu.astrud.data.media.media_models.SongMetadataModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -22,22 +23,34 @@ class UserSongs(val context: Context) {
     private var getNextSongPosition = -1
 
     /**
-     * Sets the main cursor for the functions. Remember to close it on activity destruction to prevent
-     * memory leaks.
+     * ##### Sets the main cursor for the functions. Remember to close it on activity destruction to prevent memory leaks.
      *
      * @param projection Array<String> of metadata you want to use with the cursor
      * @param mustHave Array<String> of "must have"s when showing the song. e.g., when you want the
      * cursor only to select songs that have a defined album.
      * All possible inputs: "ALBUM", "ARTIST", "YEAR"
-     *
      * @param sort String of the sort order you want to use. Default is "ASC". Use "DSC" for
      * descending and RANDOM for random order.
      *
+     *
+     * ##### By the way, here is a default projection that gets the most important metadata:
+     * ```
+     * arrayOf(
+     *     MediaStore.Audio.Media.TITLE,
+     *     MediaStore.Audio.Media.ARTIST,
+     *     MediaStore.Audio.Media.ALBUM,
+     *     MediaStore.Audio.Media._ID,
+     *     MediaStore.Audio.Media.ALBUM_ID,
+     *     MediaStore.Audio.Media.DURATION,
+     *     MediaStore.Audio.Media.YEAR
+     * )
+     * ```
      *
      * @author bluu
      * @see closeCursor */
     suspend fun setCursor(
         projection : Array<String>,
+        specificUri : Uri? = null,
         mustHave : Array<String>? = null,
         sort : String = "ASC"
     ) = withContext(Dispatchers.IO){
@@ -58,31 +71,39 @@ class UserSongs(val context: Context) {
 
         cursor?.close()
 
-        val collection: Uri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
 
-        val selectionConditions = mutableListOf<String>()
-        selectionConditions.add("${MediaStore.Audio.Media.IS_MUSIC} != 0")
-        selectionConditions.add("${MediaStore.Audio.Media.IS_PENDING} = 0")
-
-        if(!mustHave.isNullOrEmpty()) {
-            if(mustHave.contains("ALBUM")) {
-                selectionConditions.add("${MediaStore.Audio.Media.ALBUM} IS NOT NULL")
-            }
-            if(mustHave.contains("ARTIST")) {
-                selectionConditions.add("${MediaStore.Audio.Media.ARTIST} IS NOT NULL")
-            }
-            if(mustHave.contains("YEAR")) {
-                selectionConditions.add("${MediaStore.Audio.Media.YEAR} IS NOT NULL")
-            }
-        }
-
-        val finalSelection = selectionConditions.joinToString(" AND ")
+        val collection = specificUri ?: MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        val finalSelection : String?
         val finalSelectionArgs : Array<String>? = null
+        val sortOrder : String?
 
-        val sortOrder = if(sort == "RANDOM"){
-            "RANDOM()"
+        if(specificUri == null) {
+            val selectionConditions = mutableListOf<String>()
+            selectionConditions.add("${MediaStore.Audio.Media.IS_MUSIC} != 0")
+            selectionConditions.add("${MediaStore.Audio.Media.IS_PENDING} = 0")
+
+            if (!mustHave.isNullOrEmpty()) {
+                if (mustHave.contains("ALBUM")) {
+                    selectionConditions.add("${MediaStore.Audio.Media.ALBUM} IS NOT NULL")
+                }
+                if (mustHave.contains("ARTIST")) {
+                    selectionConditions.add("${MediaStore.Audio.Media.ARTIST} IS NOT NULL")
+                }
+                if (mustHave.contains("YEAR")) {
+                    selectionConditions.add("${MediaStore.Audio.Media.YEAR} IS NOT NULL")
+                }
+            }
+
+            finalSelection = selectionConditions.joinToString(" AND ")
+
+            sortOrder = if (sort == "RANDOM") {
+                "RANDOM()"
+            } else {
+                "${MediaStore.Audio.Media.TITLE} $sort"
+            }
         } else {
-            "${MediaStore.Audio.Media.TITLE} $sort"
+            finalSelection = null
+            sortOrder = null
         }
 
         try {
@@ -105,7 +126,7 @@ class UserSongs(val context: Context) {
         Log.d("UserSongs", "Cursor closed.")
     }
 
-    suspend fun getRandomSong(): Map<String?, String?>? = withContext(Dispatchers.IO) {
+    suspend fun getRandomSong(): SongMetadataModel? = withContext(Dispatchers.IO) {
         val readPermission = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 context,
@@ -140,24 +161,26 @@ class UserSongs(val context: Context) {
 
                     val title : String? = it.getString(titleColumn)
                     val artist: String? = it.getString(artistColumn)
-                    val id : String = it.getString(idColumn)
+                    val id : Long = it.getLong(idColumn)
                     val album : String = it.getString(albumColumn)
-                    val albumId = it.getLong(albumIdColumn)
+                    val albumId : Long = it.getLong(albumIdColumn)
                     val albumArtUri : String? = ContentUris.withAppendedId(
                         "content://media/external/audio/albumart".toUri(),
                         albumId
                     ).toString()
                     val songUri = ContentUris.withAppendedId(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                        id.toLong()
+                        id
                     ).toString()
 
-                    return@withContext mapOf(
-                        "title" to title,
-                        "artist" to artist,
-                        "uri" to songUri,
-                        "album" to album,
-                        "albumArtUri" to albumArtUri
+                    return@withContext SongMetadataModel(
+                        title,
+                        artist,
+                        album,
+                        songUri,
+                        albumArtUri,
+                        null,
+                        null
                     )
                 }
             }
@@ -177,7 +200,7 @@ class UserSongs(val context: Context) {
      * Default is true.
      * @return Map<String, String?>?
      * @see setCursor*/
-    suspend fun getNextSong(check: Boolean = true) : Map<String, String?>? = withContext(Dispatchers.IO){
+    suspend fun getNextSong(check: Boolean = true) : SongMetadataModel? = withContext(Dispatchers.IO){
         if(check) {
             val readPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 ContextCompat.checkSelfPermission(
@@ -208,6 +231,8 @@ class UserSongs(val context: Context) {
                 val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
                 val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
                 val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
+                val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
+                val albumIdColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
                 val yearColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
 
                 if(it.moveToNext()) {
@@ -216,13 +241,27 @@ class UserSongs(val context: Context) {
                     val title = it.getString(titleColumn) ?: "Unknown Title"
                     val album = it.getString(albumColumn) ?: "Unknown Album"
                     val artist = it.getString(artistColumn) ?: "Unknown Artist"
-                    val year = if(it.isNull(yearColumn)) {null} else {it.getInt(yearColumn)}
+                    val id : String = it.getString(idColumn)
+                    val albumId = it.getLong(albumIdColumn)
+                    val songUri = ContentUris.withAppendedId(
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                        id.toLong()
+                    ).toString()
+                    val albumArtUri : String? = ContentUris.withAppendedId(
+                        "content://media/external/audio/albumart".toUri(),
+                        albumId
+                    ).toString()
 
-                    return@withContext mapOf(
-                        "title" to title,
-                        "album" to album,
-                        "artist" to artist,
-                        "year" to year.toString()
+                    val year = if(it.isNull(yearColumn)) {null} else {it.getLong(yearColumn)}
+
+                    return@withContext SongMetadataModel(
+                        title,
+                        artist,
+                        album,
+                        songUri,
+                        albumArtUri,
+                        null,
+                        year
                     )
                 }
             }
@@ -261,7 +300,7 @@ class UserSongs(val context: Context) {
         }
     }
 
-    suspend fun searchSong(input : String) : MutableList<Map<String, String?>?>? = withContext(
+    suspend fun searchSong(input : String) : List<SongMetadataModel>? = withContext(
         Dispatchers.IO){
         val readPermission = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
@@ -285,16 +324,17 @@ class UserSongs(val context: Context) {
         val inputFinal = input.lowercase().trim()
         val length = inputFinal.length
 
-        val searchResult : MutableList<Map<String, String?>?> = mutableListOf()
+        val searchResult : MutableList<SongMetadataModel> = mutableListOf()
 
         while(iteratorNumber <= 10) {
             iteratorNumber++
 
             val songMap = getNextSong(false)
-            if(songMap != null && songMap["title"] != null){
-                val songLetters = songMap["title"]?.slice(0..length)
-                ?.lowercase()
-                ?.trim()
+            if(songMap != null && songMap.title != null){
+                val songLetters = songMap.title
+                    .slice(0..length)
+                    .lowercase()
+                    .trim()
 
                 if(inputFinal == songLetters) {
                     searchResult.add(songMap)
@@ -302,7 +342,7 @@ class UserSongs(val context: Context) {
             }
         }
 
-        return@withContext searchResult
+        return@withContext searchResult.toList()
     }
 
     /** Lists all of the uniques "characteristics". e.g., list all the unique albums.
@@ -389,7 +429,86 @@ class UserSongs(val context: Context) {
                 }
             }
         } catch(e: Exception) {
-            Log.d("Error", "Error in UserSongs.listAllDesired(): $e")
+            Log.e("Error", "Error in UserSongs.listAllDesired(): $e")
+        } finally {
+            localCursor?.close()
+        }
+        return@withContext null
+    }
+
+    suspend fun getMetadataByUri(uri : Uri) : SongMetadataModel? = withContext(Dispatchers.IO){
+        val readPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.READ_MEDIA_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (!readPermission) {
+            Log.e("Permission Error", "No permission for getMetadataByUri()")
+            return@withContext null
+        }
+
+        var localCursor : Cursor? = null
+
+        val projection = arrayOf(
+            MediaStore.Audio.Media.TITLE,
+            MediaStore.Audio.Media.ARTIST,
+            MediaStore.Audio.Media.ALBUM,
+            MediaStore.Audio.Media.ALBUM_ID,
+            MediaStore.Audio.Media.DURATION,
+            MediaStore.Audio.Media.YEAR
+        )
+
+        try{
+            localCursor = context.contentResolver.query(
+                uri,
+                projection,
+                null,
+                null,
+                null
+            )
+
+            localCursor?.let {
+                if(it.moveToFirst()) {
+                    val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
+                    val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
+                    val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
+                    val albumIdColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+                    val durationColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+                    val yearColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
+
+                    val title : String? = it.getString(titleColumn)
+                    val artist : String? = it.getString(artistColumn)
+                    val album : String? = it.getString(albumColumn)
+                    val albumId : Long = it.getLong(albumIdColumn)
+                    val albumArtUri : String? = ContentUris.withAppendedId(
+                        "content://media/external/audio/albumart".toUri(),
+                        albumId
+                    ).toString()
+                    val duration: Long? = if (it.isNull(durationColumn)) null else it.getLong(durationColumn)
+                    val year = if(it.isNull(yearColumn)) null else it.getLong(yearColumn)
+
+                    return@withContext SongMetadataModel(
+                        title,
+                        artist,
+                        album,
+                        uri.toString(),
+                        albumArtUri,
+                        duration,
+                        year
+                    )
+                } else{
+                    Log.w("UserSongs", "No metadata found for the song at Uri: $uri")
+                }
+            }
+        } catch(e: Exception) {
+            Log.e("Error", "Error in UserSongs.getMetadataByUri(): ${e.message}")
         } finally {
             localCursor?.close()
         }
