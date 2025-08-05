@@ -37,10 +37,10 @@
                 <objectAnimator
                     android:propertyName="translateY"
                     android:duration="250"
-                    android:valueFrom="0"
+                    android:valueFrom="10"
                     android:valueTo="-40"
                     android:valueType="floatType"
-                    android:interpolator="@android:anim/decelerate_interpolator"/>
+                    android:interpolator="@android:anim/anticipate_interpolator"/>
                 <objectAnimator
                     android:propertyName="scaleY"
                     android:startOffset="250"
