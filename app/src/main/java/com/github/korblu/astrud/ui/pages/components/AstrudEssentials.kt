@@ -1,6 +1,7 @@
 package com.github.korblu.astrud.ui.pages.components
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.annotation.Keep
@@ -322,7 +323,7 @@ fun AstrudNavigationBar(
     val triggerEffect = remember { mutableStateOf(false) }
     val shouldScroll = remember { mutableStateOf(false) }
     val targetPage = remember { mutableIntStateOf(0) }
-    val currentPage = remember { mutableIntStateOf(pagerState.currentPage) }
+    val currentPage = remember { mutableIntStateOf(0) }
 
     Column {
         NowPlayingExtension(barViewModel)
@@ -343,9 +344,12 @@ fun AstrudNavigationBar(
 
             Routes.entries.forEachIndexed { index, route ->
                 val selected = route.page == currentPage.intValue
-                val atEnd = remember { mutableStateOf<Boolean?>(null) }
+                val atEnd = remember { mutableStateOf(selected) }
                 val animatedImageVector = AnimatedImageVector.animatedVectorResource(route.avd)
-                val painter = rememberAnimatedVectorPainter(animatedImageVector, atEnd.value ?: true)
+
+                LaunchedEffect(selected) {
+                    atEnd.value = selected
+                }
 
                 NavigationBarItem(
                     modifier = Modifier.animateContentSize(),
@@ -358,30 +362,18 @@ fun AstrudNavigationBar(
                         )
                     },
                     icon = {
-                        if (selected) {
-                            atEnd.value = true
-                            Icon(
-                                painter = painter,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                contentDescription = route.description
-                            )
-                        } else {
-                            atEnd.value = false
-                            Icon(
-                                painter = painterResource(route.staticIcon),
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                contentDescription = route.description
-                            )
-                        }
+                        Icon(
+                            painter = if (selected) rememberAnimatedVectorPainter(animatedImageVector, atEnd.value) else painterResource(route.staticIcon),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            contentDescription = route.description
+                        )
                     },
                     onClick = {
-                        atEnd.value = true
                         targetPage.intValue = route.page
                         shouldScroll.value = true
                         triggerEffect.value = !triggerEffect.value
                     }
                 )
-
             }
         }
     }
