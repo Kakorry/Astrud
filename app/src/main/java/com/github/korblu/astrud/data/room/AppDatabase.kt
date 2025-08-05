@@ -9,7 +9,7 @@ import com.github.korblu.astrud.data.room.entity.RoomRecents
 
 @Database(
     entities = [RoomRecents::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase(){
@@ -34,7 +34,9 @@ abstract class AppDatabase : RoomDatabase(){
                     AppDatabase::class.java,
                     "astrud_app_db"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3)
                     .build()
                 INSTANCE = instance
                 instance
