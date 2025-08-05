@@ -5,9 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.github.korblu.astrud.data.room.entity.RoomRecents
-import com.github.korblu.astrud.data.room.pojo.LastPlayedAlbumsInfo
-import com.github.korblu.astrud.data.room.pojo.LastPlayedArtistsInfo
-import kotlinx.coroutines.flow.Flow
+import com.github.korblu.astrud.data.room.room_models.LastPlayedAlbumsInfo
+import com.github.korblu.astrud.data.room.room_models.LastPlayedArtistsInfo
 
 @Dao
 interface RoomRecentsDao {
@@ -17,8 +16,8 @@ interface RoomRecentsDao {
     @Query("SELECT * FROM recents ORDER BY lastPlayedTimestamp DESC LIMIT :limit")
     suspend fun getMostRecents(limit: Int) : List<RoomRecents>
 
-    @Query("SELECT * FROM recents WHERE songId = :songId")
-    suspend fun getSongById(songId: String) : RoomRecents?
+    @Query("SELECT * FROM recents WHERE songUri = :songUri")
+    suspend fun getSongById(songUri: String) : RoomRecents?
 
     @Query("""
         SELECT album, MAX(lastPlayedTimestamp) AS maxTimestamp

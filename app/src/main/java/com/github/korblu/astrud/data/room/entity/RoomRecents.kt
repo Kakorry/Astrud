@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "recents")
 data class RoomRecents(
-    @PrimaryKey val songId: String,
+    @PrimaryKey val songUri: String,
     val lastPlayedTimestamp: Long,
     val album: String?,
     val artist: String?
