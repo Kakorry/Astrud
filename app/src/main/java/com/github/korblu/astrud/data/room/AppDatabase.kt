@@ -4,16 +4,34 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.github.korblu.astrud.data.room.dao.RoomRecentsDao
+import com.github.korblu.astrud.data.room.dao.AlbumsPlayedDao
+import com.github.korblu.astrud.data.room.dao.ArtistsPlayedDao
+import com.github.korblu.astrud.data.room.dao.OtherStatsDao
+import com.github.korblu.astrud.data.room.dao.RecentsDao
+import com.github.korblu.astrud.data.room.dao.SongsPlayedDao
+import com.github.korblu.astrud.data.room.entity.RoomAlbumsPlayed
+import com.github.korblu.astrud.data.room.entity.RoomArtistsPlayed
+import com.github.korblu.astrud.data.room.entity.RoomOtherStats
 import com.github.korblu.astrud.data.room.entity.RoomRecents
+import com.github.korblu.astrud.data.room.entity.RoomSongsPlayed
 
 @Database(
-    entities = [RoomRecents::class],
-    version = 3,
+    entities = [
+        RoomRecents::class,
+        RoomSongsPlayed::class,
+        RoomAlbumsPlayed::class,
+        RoomArtistsPlayed::class,
+        RoomOtherStats::class
+               ],
+    version = 4,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase(){
-    abstract fun roomRecentsDao() : RoomRecentsDao
+    abstract fun recentsDao() : RecentsDao
+    abstract fun songsPlayedDao() : SongsPlayedDao
+    abstract fun albumsPlayedDao() : AlbumsPlayedDao
+    abstract fun artistsPlayedDao() : ArtistsPlayedDao
+    abstract fun otherStatsDao() : OtherStatsDao
 
     companion object {
         @Volatile
