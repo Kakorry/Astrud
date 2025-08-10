@@ -9,7 +9,7 @@ import com.github.korblu.astrud.data.room.room_models.LastPlayedAlbumsInfo
 import com.github.korblu.astrud.data.room.room_models.LastPlayedArtistsInfo
 
 @Dao
-interface RoomRecentsDao {
+interface RecentsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(song: RoomRecents)
 

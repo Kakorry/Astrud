@@ -1,6 +1,6 @@
 package com.github.korblu.astrud.data.repos
 
-import com.github.korblu.astrud.data.room.dao.RoomRecentsDao
+import com.github.korblu.astrud.data.room.dao.RecentsDao
 import com.github.korblu.astrud.data.room.entity.RoomRecents
 import com.github.korblu.astrud.data.room.room_models.LastPlayedAlbumsInfo
 import com.github.korblu.astrud.data.room.room_models.LastPlayedArtistsInfo
@@ -8,7 +8,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class RoomRecentsRepo (private val recentsDao: RoomRecentsDao){
+class RoomRecentsRepo (private val recentsDao: RecentsDao){
     private val tag = "RoomRecentsRepo"
 
     suspend fun insertOrUpdate(song: RoomRecents) {
