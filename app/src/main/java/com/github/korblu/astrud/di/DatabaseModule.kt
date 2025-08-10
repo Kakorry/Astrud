@@ -11,7 +11,11 @@ import com.github.korblu.astrud.data.datastore.LayoutSongsListSerializer
 import com.github.korblu.astrud.data.room.AppDatabase
 import com.github.korblu.astrud.data.room.MIGRATION_1_2
 import com.github.korblu.astrud.data.room.MIGRATION_2_3
-import com.github.korblu.astrud.data.room.dao.RoomRecentsDao
+import com.github.korblu.astrud.data.room.dao.AlbumsPlayedDao
+import com.github.korblu.astrud.data.room.dao.ArtistsPlayedDao
+import com.github.korblu.astrud.data.room.dao.OtherStatsDao
+import com.github.korblu.astrud.data.room.dao.RecentsDao
+import com.github.korblu.astrud.data.room.dao.SongsPlayedDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,7 +57,31 @@ object DatabaseModule {
 
     @Singleton
     @Provides
-    fun provideRoomRecentsDao(appDatabase: AppDatabase): RoomRecentsDao {
-        return appDatabase.roomRecentsDao()
+    fun provideRoomRecentsDao(appDatabase: AppDatabase) : RecentsDao {
+        return appDatabase.recentsDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideSongsPlayedDao(appDatabase: AppDatabase) : SongsPlayedDao {
+        return appDatabase.songsPlayedDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideAlbumsPlayedDao(appDatabase: AppDatabase) : AlbumsPlayedDao {
+        return appDatabase.albumsPlayedDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideArtistsPlayedDao(appDatabase: AppDatabase) : ArtistsPlayedDao {
+        return appDatabase.artistsPlayedDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideOtherStatsDao(appDatabase: AppDatabase) : OtherStatsDao {
+        return appDatabase.otherStatsDao()
     }
 }
