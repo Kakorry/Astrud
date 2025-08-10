@@ -4,8 +4,6 @@ import android.content.Context
 import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.korblu.astrud.data.datastore.LayoutSong
-import com.github.korblu.astrud.data.datastore.UserPreferences
 import com.github.korblu.astrud.data.media.UserSongs
 import com.github.korblu.astrud.data.repos.LayoutSongsRepo
 import com.github.korblu.astrud.data.repos.RoomRecentsRepo
@@ -16,10 +14,7 @@ import com.github.korblu.astrud.data.room.room_models.LastPlayedArtistsInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,8 +34,8 @@ class SongViewModel @Inject constructor(
     private val _wasPermissionGiven = MutableStateFlow<Boolean?>(null)
     val wasPermissionGiven = _wasPermissionGiven.asStateFlow()
 
-    private val _layoutSongObjectList = MutableStateFlow<List<LayoutSong>>(listOf())
-    val layoutSongObjectList = _layoutSongObjectList.asStateFlow()
+//    private val _layoutSongObjectList = MutableStateFlow<List<LayoutSong>>(listOf())
+//    val layoutSongObjectList = _layoutSongObjectList.asStateFlow()
 
     private val _recentSongsFlow = MutableStateFlow<List<RoomRecents>>(listOf())
     val recentSongsFlow = _recentSongsFlow.asStateFlow()
@@ -62,12 +57,12 @@ class SongViewModel @Inject constructor(
     }
 
     // For tests. Will probably be removed.
-    val userPreferences: StateFlow<UserPreferences> = userPrefRepo.userPreferencesFlow
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UserPreferences.getDefaultInstance()
-        )
+//    val userPreferences: StateFlow<UserPreferences> = userPrefRepo.userPreferencesFlow
+//        .stateIn(
+//            scope = viewModelScope,
+//            started = SharingStarted.WhileSubscribed(5000),
+//            initialValue = UserPreferences.getDefaultInstance()
+//        )
 
     fun onPermissionChange(isGranted: Boolean) {
         viewModelScope.launch {
@@ -75,17 +70,17 @@ class SongViewModel @Inject constructor(
         }
     }
 
-    fun onToLayoutSongObject(songs : List<Map<String, String?>>) {
-        viewModelScope.launch {
-            _layoutSongObjectList.value = layoutSongsRepo.toLayoutSongObject(songs)
-        }
-    }
-
-    fun onSetLayoutSongs(songsList : List<LayoutSong>) {
-        viewModelScope.launch {
-            layoutSongsRepo.setSongs(songsList)
-        }
-    }
+//    fun onToLayoutSongObject(songs : List<Map<String, String?>>) {
+//        viewModelScope.launch {
+//            _layoutSongObjectList.value = layoutSongsRepo.toLayoutSongObject(songs)
+//        }
+//    }
+//
+//    fun onSetLayoutSongs(songsList : List<LayoutSong>) {
+//        viewModelScope.launch {
+//            layoutSongsRepo.setSongs(songsList)
+//        }
+//    }
 
     fun onClearLayoutSongs() {
         viewModelScope.launch {
